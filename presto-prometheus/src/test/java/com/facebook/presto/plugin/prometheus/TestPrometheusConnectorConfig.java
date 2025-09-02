@@ -43,7 +43,8 @@ public class TestPrometheusConnectorConfig
                 .setTlsEnabled(false)
                 .setTruststorePassword(null)
                 .setVerifyHostName(false)
-                .setTrustStorePath(null));
+                .setTrustStorePath(null)
+                .setCaseSensitiveNameMatching(false));
     }
 
     @Test
@@ -59,6 +60,7 @@ public class TestPrometheusConnectorConfig
                 .put("prometheus.tls.truststore-password", "password")
                 .put("prometheus.tls.truststore-path", "/tmp/path/truststore")
                 .put("verify-host-name", "true")
+                .put("case-sensitive-name-matching", "true")
                 .build();
 
         URI uri = URI.create("file://test.json");
