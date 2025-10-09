@@ -37,18 +37,22 @@ import java.util.Optional;
 import java.util.Set;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.util.Locale.ROOT;
 import static java.util.Objects.requireNonNull;
 
 public class PrometheusMetadata
         implements ConnectorMetadata
 {
     private final PrometheusClient prometheusClient;
+    private final boolean caseSensitiveNameMatchingEnabled;
 
     @Inject
-    public PrometheusMetadata(PrometheusClient prometheusClient)
+    public PrometheusMetadata(PrometheusClient prometheusClient, PrometheusConnectorConfig config)
     {
         requireNonNull(prometheusClient, "client is null");
+        requireNonNull(config, "config is null");
         this.prometheusClient = prometheusClient;
+        this.caseSensitiveNameMatchingEnabled = config.isCaseSensitiveNameMatchingEnabled();
     }
 
     private static List<String> listSchemaNames()
@@ -69,11 +73,14 @@ public class PrometheusMetadata
             return null;
         }
 
-        if (prometheusClient.getTable(tableName.getSchemaName(), tableName.getTableName()) == null) {
-            return null;
+        String normalizedRequestedName = normalizeIdentifier(session, tableName.getTableName());
+        for (String actualTableName : prometheusClient.getTableNames(tableName.getSchemaName())) {
+            String normalizedActualName = normalizeIdentifier(session, actualTableName);
+            if (normalizedRequestedName.equals(normalizedActualName)) {
+                return new PrometheusTableHandle(tableName.getSchemaName(), actualTableName);
+            }
         }
-
-        return new PrometheusTableHandle(tableName.getSchemaName(), tableName.getTableName());
+        return null;
     }
 
     @Override
@@ -97,7 +104,7 @@ public class PrometheusMetadata
     @Override
     public ConnectorTableMetadata getTableMetadata(ConnectorSession session, ConnectorTableHandle table)
     {
-        return getTableMetadata(((PrometheusTableHandle) table).toSchemaTableName());
+        return getTableMetadata(session, ((PrometheusTableHandle) table).toSchemaTableName());
     }
 
     @Override
@@ -143,7 +150,7 @@ public class PrometheusMetadata
         requireNonNull(prefix, "prefix is null");
         ImmutableMap.Builder<SchemaTableName, List<ColumnMetadata>> columns = ImmutableMap.builder();
         for (SchemaTableName tableName : listTables(session, prefix)) {
-            ConnectorTableMetadata tableMetadata = getTableMetadata(tableName);
+            ConnectorTableMetadata tableMetadata = getTableMetadata(session, tableName);
             // table can disappear during listing operation
             if (tableMetadata != null) {
                 columns.put(tableName, tableMetadata.getColumns());
@@ -152,18 +159,25 @@ public class PrometheusMetadata
         return columns.build();
     }
 
-    private ConnectorTableMetadata getTableMetadata(SchemaTableName tableName)
+    private ConnectorTableMetadata getTableMetadata(ConnectorSession session, SchemaTableName tableName)
     {
         if (!listSchemaNames().contains(tableName.getSchemaName())) {
             return null;
         }
 
-        PrometheusTable table = prometheusClient.getTable(tableName.getSchemaName(), tableName.getTableName());
-        if (table == null) {
-            return null;
+        String normalizedRequestedName = normalizeIdentifier(session, tableName.getTableName());
+        // Get all table names and check if any match the normalized requested name
+        for (String actualTableName : prometheusClient.getTableNames(tableName.getSchemaName())) {
+            String normalizedActualName = normalizeIdentifier(session, actualTableName);
+            if (normalizedRequestedName.equals(normalizedActualName)) {
+                PrometheusTable table = prometheusClient.getTable(tableName.getSchemaName(), actualTableName);
+                if (table == null) {
+                    return null;
+                }
+                return new ConnectorTableMetadata(new SchemaTableName(tableName.getSchemaName(), actualTableName), table.getColumnsMetadata());
+            }
         }
-
-        return new ConnectorTableMetadata(tableName, table.getColumnsMetadata());
+        return null;
     }
 
     private List<SchemaTableName> listTables(ConnectorSession session, SchemaTablePrefix prefix)
@@ -172,5 +186,10 @@ public class PrometheusMetadata
             return listTables(session, Optional.ofNullable(prefix.getSchemaName()));
         }
         return ImmutableList.of(prefix.toSchemaTableName());
+    }
+
+    public String normalizeIdentifier(ConnectorSession session, String identifier)
+    {
+        return caseSensitiveNameMatchingEnabled ? identifier : identifier.toLowerCase(ROOT);
     }
 }
