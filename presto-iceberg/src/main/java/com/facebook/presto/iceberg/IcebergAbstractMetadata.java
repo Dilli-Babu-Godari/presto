@@ -1348,6 +1348,11 @@ public abstract class IcebergAbstractMetadata
         return Optional.empty();
     }
 
+    public TypeManager getTypeManager()
+    {
+        return typeManager;
+    }
+
     @Override
     public Optional<Object> getInfo(ConnectorTableLayoutHandle tableHandle)
     {
