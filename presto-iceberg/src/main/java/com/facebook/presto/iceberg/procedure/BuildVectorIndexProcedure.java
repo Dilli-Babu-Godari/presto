@@ -33,7 +33,6 @@ import java.lang.invoke.MethodHandle;
 import java.nio.file.Path;
 
 import static com.facebook.presto.common.block.MethodHandleUtil.methodHandle;
-import static com.facebook.presto.common.type.StandardTypes.INTEGER;
 import static com.facebook.presto.common.type.StandardTypes.VARCHAR;
 import static java.util.Objects.requireNonNull;
 
@@ -68,42 +67,53 @@ public class BuildVectorIndexProcedure
                 BuildVectorIndexProcedure.class,
                 "buildVectorIndex",
                 ConnectorSession.class,
-                String.class,    // schemaName
-                String.class,    // tableName
-                String.class,    // columnName
-                String.class,    // similarityFunction
-                Integer.class,   // m
-                Integer.class    // efConstruction
+                String.class,    // indexName
+                String.class     // columnPath
         ).bindTo(this);
 
         return new Procedure(
-                "system",
-                "build_vector_index",
+                "system", // Use "system" as the schema name instead of an empty string
+                "CREATE_VEC_INDEX",
                 ImmutableList.of(
-                        new Procedure.Argument("schema_name", VARCHAR),
-                        new Procedure.Argument("table_name", VARCHAR),
-                        new Procedure.Argument("column_name", VARCHAR),
-                        new Procedure.Argument("similarity_function", VARCHAR),
-                        new Procedure.Argument("m", INTEGER),
-                        new Procedure.Argument("ef_construction", INTEGER)),
+                        new Procedure.Argument("index_name", VARCHAR),
+                        new Procedure.Argument("column_path", VARCHAR)),
                 handle);
     }
 
     public void buildVectorIndex(
             ConnectorSession session,
-            String schemaName,
-            String tableName,
-            String columnName,
-            String similarityFunction,
-            Integer m,
-            Integer efConstruction)
+            String indexName,
+            String columnPath)
     {
-        log.info("Building vector index for %s.%s.%s", schemaName, tableName, columnName);
+        // Parse the column path to extract catalog, schema, table, and column names
+        // Format: catalog.schema.table.column or schema.table.column
+        String[] parts = columnPath.split("\\.");
+        String catalogName = null;
+        String schemaName;
+        String tableName;
+        String columnName;
+        if (parts.length == 4) {
+            // Format: catalog.schema.table.column
+            catalogName = parts[0];
+            schemaName = parts[1];
+            tableName = parts[2];
+            columnName = parts[3];
+        }
+        else if (parts.length == 3) {
+            // Format: schema.table.column
+            schemaName = parts[0];
+            tableName = parts[1];
+            columnName = parts[2];
+        }
+        else {
+            throw new IllegalArgumentException("Invalid column path format. Expected: [catalog.]schema.table.column, got: " + columnPath);
+        }
+        log.info("Building vector index '%s' for %s.%s.%s", indexName, schemaName, tableName, columnName);
         SchemaTableName schemaTableName = new SchemaTableName(schemaName, tableName);
-        // Default values if null
-        int mValue = (m != null) ? m : 16;
-        int efValue = (efConstruction != null) ? efConstruction : 100;
-        String simFunction = (similarityFunction != null) ? similarityFunction : "COSINE";
+        // Use default values for similarity function, m, and ef_construction
+        int mValue = 16;
+        int efValue = 100;
+        String simFunction = "COSINE";
 
         // Create a new transaction handle for this procedure
         ConnectorTransactionHandle transactionHandle = new HiveTransactionHandle();
@@ -122,6 +132,8 @@ public class BuildVectorIndexProcedure
                     session,
                     schemaTableName,
                     columnName,
+                    indexName,
+                    catalogName,  // Pass the catalog name to the builder
                     simFunction,
                     mValue,
                     efValue);

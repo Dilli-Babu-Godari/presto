@@ -34,23 +34,22 @@ import com.facebook.presto.iceberg.delete.DeleteFile;
 import com.facebook.presto.spi.ConnectorPageSource;
 import com.facebook.presto.spi.ConnectorSession;
 import com.facebook.presto.spi.SchemaTableName;
+import com.facebook.presto.spi.SplitContext;
+import com.facebook.presto.spi.SplitWeight;
 import com.facebook.presto.spi.connector.ConnectorMetadata;
 import com.facebook.presto.spi.connector.ConnectorPageSourceProvider;
 import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
 import com.facebook.presto.spi.relation.ConstantExpression;
+import com.facebook.presto.spi.schedule.NodeSelectionStrategy;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.github.jbellis.jvector.graph.GraphIndexBuilder;
 import io.github.jbellis.jvector.graph.ImmutableGraphIndex;
 import io.github.jbellis.jvector.graph.RandomAccessVectorValues;
-import io.github.jbellis.jvector.graph.disk.AbstractGraphIndexWriter;
-import io.github.jbellis.jvector.graph.disk.OnDiskGraphIndexWriter;
-import io.github.jbellis.jvector.graph.disk.OrdinalMapper;
-import io.github.jbellis.jvector.graph.disk.feature.Feature;
-import io.github.jbellis.jvector.graph.disk.feature.FeatureId;
-import io.github.jbellis.jvector.graph.disk.feature.InlineVectors;
+import io.github.jbellis.jvector.graph.disk.OnDiskGraphIndex;
+import io.github.jbellis.jvector.graph.similarity.BuildScoreProvider;
 import io.github.jbellis.jvector.vector.VectorSimilarityFunction;
-import io.github.jbellis.jvector.vector.types.VectorFloat;
+import io.github.jbellis.jvector.vector.VectorUtil;
 import org.apache.iceberg.FileScanTask;
 import org.apache.iceberg.PartitionSpecParser;
 import org.apache.iceberg.Table;
@@ -63,7 +62,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
@@ -102,6 +100,8 @@ public class IcebergVectorIndexBuilder
             ConnectorSession session,
             SchemaTableName schemaTableName,
             String columnName,
+            String indexName,
+            String catalogName,
             String similarityFunction,
             int m,
             int efConstruction) throws Exception
@@ -111,7 +111,15 @@ public class IcebergVectorIndexBuilder
         // Use a fixed local directory for storing vector indexes
         String schemaName = schemaTableName.getSchemaName();
         String tableName = schemaTableName.getTableName();
-        Path outputPath = Paths.get(DEFAULT_INDEX_DIR, schemaName, tableName, columnName, "index.hnsw");
+        // Use the index name in the path, and include catalog name if available
+        Path outputPath;
+        if (catalogName != null) {
+            outputPath = Paths.get(DEFAULT_INDEX_DIR, catalogName, schemaName, tableName, indexName + ".hnsw");
+            log.info("Using catalog name '%s' in index path", catalogName);
+        }
+        else {
+            outputPath = Paths.get(DEFAULT_INDEX_DIR, schemaName, tableName, indexName + ".hnsw");
+        }
         log.info("Vector index will be saved to local path: %s", outputPath);
         // 2. Read vectors from the specified column
         List<float[]> vectors = readVectorsFromTable(
@@ -124,6 +132,12 @@ public class IcebergVectorIndexBuilder
         if (vectors.isEmpty()) {
             throw new IllegalStateException("No vectors found in column: " + columnName);
         }
+        // Normalize all vectors using L2 normalization
+        log.info("Normalizing vectors using L2 normalization");
+        for (float[] vector : vectors) {
+            CustomVectorFloat customVector = new CustomVectorFloat(vector);
+            VectorUtil.l2normalize(customVector.toArrayVectorFloat());
+        }
         // 3. Create vector values wrapper
         int dimension = vectors.get(0).length;
         RandomAccessVectorValues ravv = new ListRandomAccessVectorValues(vectors, dimension);
@@ -131,8 +145,9 @@ public class IcebergVectorIndexBuilder
         VectorSimilarityFunction simFunction = getVectorSimilarityFunction(similarityFunction);
         // 5. Build the index
         log.info("Building vector index with %d vectors of dimension %d", vectors.size(), dimension);
-        // Default values for beamWidth (4*m), alpha (1.2f), and filtered (false)
-        GraphIndexBuilder builder = new GraphIndexBuilder(ravv, simFunction, m, efConstruction, 4 * m, 1.2f, false);
+        // Create a BuildScoreProvider from the RandomAccessVectorValues and similarity function
+        BuildScoreProvider bsp = BuildScoreProvider.randomAccessScoreProvider(ravv, simFunction);
+        GraphIndexBuilder builder = new GraphIndexBuilder(bsp, ravv.dimension(), m, efConstruction, 4 * m, 1.2f, false, true);
         ImmutableGraphIndex index = builder.build(ravv);
         log.info("Vector index built successfully with %d nodes", index.size());
         // 6. Save index to disk
@@ -140,71 +155,15 @@ public class IcebergVectorIndexBuilder
             Files.createDirectories(outputPath.getParent());
         }
 
-        // Try to save the index using OnDiskGraphIndexWriter with writeInline method
+        // Save the index using OnDiskGraphIndex.write method
         try {
-            int maxOrdinal = Math.max(0, ravv.size() - 1);
-            // Create a builder for the OnDiskGraphIndexWriter with InlineVectors feature
-            // Using the correct package for JVector 4.0.0-rc.4
-            AbstractGraphIndexWriter.Builder<OnDiskGraphIndexWriter, ?> writerBuilder = new OnDiskGraphIndexWriter.Builder(index, outputPath)
-                    .with(new InlineVectors(dimension))
-                    .withMapper(new OrdinalMapper.IdentityMapper(maxOrdinal));
-            // Build the writer
-            OnDiskGraphIndexWriter writer = writerBuilder.build();
-            // Loop through all vectors and write them inline
-            for (int ordinal = 0; ordinal < ravv.size(); ordinal++) {
-                VectorFloat<?> vector = ravv.getVector(ordinal);
-                // Create a feature state map with a single state for INLINE_VECTORS
-                // Using the correct package for JVector 4.0.0-rc.4
-                java.util.Map<FeatureId, Feature.State> stateMap =
-                        Feature.singleState(
-                        FeatureId.INLINE_VECTORS,
-                        new InlineVectors.State(vector));
-                // Write the vector inline
-                writer.writeInline(ordinal, stateMap);
-            }
-            // Close the writer to ensure all data is flushed
-            writer.close();
-            log.info("Vector index saved to %s using writeInline method", outputPath);
+            log.info("Saving index using OnDiskGraphIndex.write method");
+            OnDiskGraphIndex.write(index, ravv, outputPath);
+            log.info("Vector index saved to %s", outputPath);
             return outputPath;
         }
         catch (Exception e) {
-            log.warn("Error using writeInline method: %s", e.getMessage());
-        }
-
-        // Fall back to Java serialization
-        try {
-            // Try to serialize the index to a file
-            try (java.io.ObjectOutputStream out = new java.io.ObjectOutputStream(
-                    new java.io.FileOutputStream(outputPath.toFile()))) {
-                out.writeObject(index);
-            }
-            log.info("Vector index saved to %s using Java serialization", outputPath);
-            return outputPath;
-        }
-        catch (Exception e) {
-            log.warn("Error using Java serialization: %s", e.getMessage());
-        }
-
-        // Last resort: try using reflection to find other methods
-        try {
-            // Create a builder for the OnDiskGraphIndexWriter
-            AbstractGraphIndexWriter.Builder<OnDiskGraphIndexWriter, ?> writerBuilder = new OnDiskGraphIndexWriter.Builder(index, outputPath)
-                    .withMapper(new OrdinalMapper.IdentityMapper(index.size() - 1));
-
-            // If no specific method was found, try to build without setting vector features
-            OnDiskGraphIndexWriter writer = writerBuilder.build();
-            // Use writeInline method to save the index with vectors inline
-            // The writeInline method expects an ordinal and a map of feature states
-            // Create an empty map for the feature states
-            Map<FeatureId, Feature.State> stateMap = new java.util.HashMap<>();
-
-            // Use ordinal 0 as the default ordinal
-            writer.writeInline(0, stateMap);
-            log.info("Vector index saved to %s using writeInline method", outputPath);
-            return outputPath;
-        }
-        catch (Exception e) {
-            log.error("Failed to build writer: %s", e.getMessage());
+            log.error(e, "Error saving index: %s", e.getMessage());
             throw e;
         }
     }
@@ -294,8 +253,8 @@ public class IcebergVectorIndexBuilder
                         IcebergUtil.getPartitionKeys(fileScanTask),
                         PartitionSpecParser.toJson(fileScanTask.spec()),
                         IcebergUtil.partitionDataFromStructLike(fileScanTask.spec(), fileScanTask.file().partition()).map(PartitionData::toJson),
-                        com.facebook.presto.spi.schedule.NodeSelectionStrategy.NO_PREFERENCE,
-                        com.facebook.presto.spi.SplitWeight.standard(),
+                        NodeSelectionStrategy.NO_PREFERENCE,
+                        SplitWeight.standard(),
                         fileScanTask.deletes().stream().map(DeleteFile::fromIceberg).collect(toImmutableList()),
                         Optional.empty(),
                         IcebergUtil.getDataSequenceNumber(fileScanTask.file()),
@@ -307,7 +266,7 @@ public class IcebergVectorIndexBuilder
                         split,
                         layoutHandle,
                         ImmutableList.of(targetColumn),
-                        new com.facebook.presto.spi.SplitContext(false),
+                        new SplitContext(false),
                         new RuntimeStats())) {
                     while (!pageSource.isFinished()) {
                         Page page = pageSource.getNextPage();
@@ -350,7 +309,7 @@ public class IcebergVectorIndexBuilder
         return new IcebergTableLayoutHandle.Builder()
                 .setPartitionColumns(ImmutableList.of())
                 .setDataColumns(ImmutableList.of())
-                .setDomainPredicate(com.facebook.presto.common.predicate.TupleDomain.all())
+                .setDomainPredicate(TupleDomain.all())
                 .setRemainingPredicate(new ConstantExpression(true, BooleanType.BOOLEAN))
                 .setPredicateColumns(ImmutableMap.of())
                 .setRequestedColumns(Optional.empty())

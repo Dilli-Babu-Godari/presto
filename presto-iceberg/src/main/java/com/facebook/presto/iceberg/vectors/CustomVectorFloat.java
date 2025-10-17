@@ -21,7 +21,7 @@ import java.lang.reflect.Method;
 
 /**
  * Custom implementation of VectorFloat that wraps a float[] array.
- * This is used because ArrayVectorFloat constructors are not public in JVector 4.0.0-rc.3.
+ * This is used because ArrayVectorFloat constructors are not public in JVector 4.0.0-rc.4.
  * Note: This class is not thread-safe. Concurrent modifications to the same instance
  * may result in unexpected behavior.
  * The vectorValue() method returns a defensive copy of the internal array to prevent
@@ -90,7 +90,7 @@ public class CustomVectorFloat
     }
 
     /**
-     * Returns this vector instance.
+     * Returns the vector instance.
      * Required by the VectorFloat interface.
      */
     @Override
@@ -123,7 +123,7 @@ public class CustomVectorFloat
     @Override
     public void copyFrom(VectorFloat src, int srcOffset, int destOffset, int length)
     {
-        // If source is also a CustomVectorFloat, we can optimize the copy
+        // If source is also a CustomVectorFloat, optimize the copy
         if (src instanceof CustomVectorFloat) {
             float[] srcValues = ((CustomVectorFloat) src).values;
             System.arraycopy(srcValues, srcOffset, this.values, destOffset, length);
