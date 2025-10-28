@@ -29,7 +29,9 @@ import com.facebook.presto.hive.HdfsConfigurationInitializer;
 import com.facebook.presto.hive.HdfsContext;
 import com.facebook.presto.hive.HdfsEnvironment;
 import com.facebook.presto.hive.HiveClientConfig;
+import com.facebook.presto.hive.HiveCompressionCodec;
 import com.facebook.presto.hive.HiveHdfsConfiguration;
+import com.facebook.presto.hive.HiveStorageFormat;
 import com.facebook.presto.hive.MetastoreClientConfig;
 import com.facebook.presto.hive.authentication.NoHdfsAuthentication;
 import com.facebook.presto.hive.s3.HiveS3Config;
@@ -70,7 +72,10 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.iceberg.BaseTable;
 import org.apache.iceberg.CatalogUtil;
+import org.apache.iceberg.DataFile;
+import org.apache.iceberg.DataFiles;
 import org.apache.iceberg.FileScanTask;
+import org.apache.iceberg.Metrics;
 import org.apache.iceberg.PartitionSpec;
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.Snapshot;
@@ -142,8 +147,11 @@ import static com.facebook.presto.hive.BaseHiveColumnHandle.ColumnType.SYNTHESIZ
 import static com.facebook.presto.hive.HiveCommonSessionProperties.PARQUET_BATCH_READ_OPTIMIZATION_ENABLED;
 import static com.facebook.presto.iceberg.FileContent.EQUALITY_DELETES;
 import static com.facebook.presto.iceberg.FileContent.POSITION_DELETES;
+import static com.facebook.presto.iceberg.FileFormat.ORC;
+import static com.facebook.presto.iceberg.FileFormat.PARQUET;
 import static com.facebook.presto.iceberg.IcebergQueryRunner.ICEBERG_CATALOG;
 import static com.facebook.presto.iceberg.IcebergQueryRunner.getIcebergDataDirectoryPath;
+import static com.facebook.presto.iceberg.IcebergSessionProperties.COMPRESSION_CODEC;
 import static com.facebook.presto.iceberg.IcebergSessionProperties.DELETE_AS_JOIN_REWRITE_ENABLED;
 import static com.facebook.presto.iceberg.IcebergSessionProperties.DELETE_AS_JOIN_REWRITE_MAX_DELETE_COLUMNS;
 import static com.facebook.presto.iceberg.IcebergSessionProperties.PUSHDOWN_FILTER_ENABLED;
@@ -166,6 +174,7 @@ import static com.facebook.presto.type.DecimalParametricType.DECIMAL;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static java.lang.String.format;
 import static java.nio.file.Files.createTempDirectory;
+import static java.util.Locale.ROOT;
 import static java.util.Objects.requireNonNull;
 import static java.util.UUID.randomUUID;
 import static java.util.function.Function.identity;
@@ -2621,6 +2630,26 @@ public abstract class IcebergDistributedTestBase
     }
 
     @Test
+    public void testUpdateWithDifferentCaseColumnNames()
+    {
+        String tableName = "test_update_case_" + randomTableSuffix();
+        try {
+            assertUpdate("CREATE TABLE " + tableName + " (id INT, str1 VARCHAR)");
+            assertUpdate("INSERT INTO " + tableName + " VALUES (1, 'a')", 1);
+
+            assertUpdate("UPDATE " + tableName + " SET id = 11 WHERE id = 1", 1);
+            assertQuery("SELECT id FROM " + tableName, "VALUES 11");
+
+            assertUpdate("UPDATE " + tableName + " SET ID = 111 WHERE ID = 11", 1);
+            assertQuery("SELECT ID FROM " + tableName, "VALUES 111");
+            assertQuery("SELECT id FROM " + tableName, "VALUES 111");
+        }
+        finally {
+            assertUpdate("DROP TABLE " + tableName);
+        }
+    }
+
+    @Test
     public void testUpdateWithPredicates()
     {
         String tableName = "test_update_predicates_" + randomTableSuffix();
@@ -2854,8 +2883,8 @@ public abstract class IcebergDistributedTestBase
 
     private void testWithAllFileFormats(Session session, BiConsumer<Session, FileFormat> test)
     {
-        test.accept(session, FileFormat.PARQUET);
-        test.accept(session, FileFormat.ORC);
+        test.accept(session, PARQUET);
+        test.accept(session, ORC);
     }
 
     private void assertHasDataFiles(Snapshot snapshot, int dataFilesCount)
@@ -3073,6 +3102,36 @@ public abstract class IcebergDistributedTestBase
         getQueryRunner().execute("DROP TABLE test_statistics_file_cache_procedure");
     }
 
+    @DataProvider(name = "testFormatAndCompressionCodecs")
+    public Object[][] compressionCodecs()
+    {
+        return Stream.of(PARQUET, ORC)
+                .flatMap(format -> Arrays.stream(HiveCompressionCodec.values())
+                        .map(codec -> new Object[] {codec, format}))
+                .toArray(Object[][]::new);
+    }
+
+    @Test(dataProvider = "testFormatAndCompressionCodecs")
+    public void testFormatAndCompressionCodecs(HiveCompressionCodec codec, FileFormat format)
+    {
+        String tableName = "test_" + format.name().toLowerCase(ROOT) + "_compression_codec_" + codec.name().toLowerCase(ROOT);
+        Session session = Session.builder(getSession())
+                .setCatalogSessionProperty("iceberg", COMPRESSION_CODEC, codec.name()).build();
+        if (codec.isSupportedStorageFormat(format == PARQUET ? HiveStorageFormat.PARQUET : HiveStorageFormat.ORC)) {
+            String codecName = format == PARQUET ? codec.getParquetCompressionCodec().name() : codec.getOrcCompressionKind().name();
+            assertQuerySucceeds(session, format("CREATE TABLE %s WITH (\"write.format.default\" = '%s') as select * from lineitem with no data", tableName, format.name()));
+            assertQuery(session, format("SELECT value FROM \"%s$properties\" WHERE key = 'write.%s.compression-codec'", tableName, format.name().toLowerCase(ROOT)), format("VALUES '%s'", codecName));
+            assertQuery(session, format("SELECT value FROM \"%s$properties\" WHERE key = 'write.format.default'", tableName), format("VALUES '%s'", format.name()));
+            assertUpdate(session, format("INSERT INTO %s SELECT * from lineitem", tableName), "select count(*) from lineitem");
+            assertQuery(session, format("SELECT * FROM %s", tableName), "select * from lineitem");
+            assertQuerySucceeds(format("DROP TABLE %s", tableName));
+        }
+        else {
+            assertQueryFails(session, format("CREATE TABLE %s WITH (\"write.format.default\" = '%s') as select * from lineitem with no data", tableName, format.name()),
+                    format("Compression codec %s is not supported for .*", codec));
+        }
+    }
+
     @DataProvider(name = "sortedTableWithSortTransform")
     public static Object[][] sortedTableWithSortTransform()
     {
@@ -3235,6 +3294,48 @@ public abstract class IcebergDistributedTestBase
         }
         finally {
             dropTable(session, tableName);
+        }
+    }
+
+    @Test
+    public void testTableWithNullColumnStats()
+    {
+        String tableName1 = "test_null_stats1";
+        String tableName2 = "test_null_stats2";
+        try {
+            assertUpdate(String.format("CREATE TABLE %s (id int, name varchar) WITH (\"write.format.default\" = 'PARQUET')", tableName1));
+            assertUpdate(String.format("INSERT INTO %s VALUES(1, '1001'), (2, '1002'), (3, '1003')", tableName1), 3);
+            Table icebergTable1 = loadTable(tableName1);
+            String dataFilePath = (String) computeActual(String.format("SELECT file_path FROM \"%s$files\" LIMIT 1", tableName1)).getOnlyValue();
+
+            assertUpdate(String.format("CREATE TABLE %s (id int, name varchar) WITH (\"write.format.default\" = 'PARQUET')", tableName2));
+            Table icebergTable2 = loadTable(tableName2);
+            Metrics newMetrics = new Metrics(3L, null, null, null, null);
+            DataFile dataFile = DataFiles.builder(icebergTable1.spec())
+                    .withPath(dataFilePath)
+                    .withFormat("PARQUET")
+                    .withFileSizeInBytes(1234L)
+                    .withMetrics(newMetrics)
+                    .build();
+            icebergTable2.newAppend().appendFile(dataFile).commit();
+
+            TableStatistics stats = getTableStats(tableName2);
+            assertEquals(stats.getRowCount(), Estimate.of(3.0));
+
+            // Assert that column statistics are present (even if they don't have detailed metrics)
+            assertFalse(stats.getColumnStatistics().isEmpty());
+
+            for (Map.Entry<ColumnHandle, ColumnStatistics> entry : stats.getColumnStatistics().entrySet()) {
+                ColumnStatistics columnStats = entry.getValue();
+                assertNotNull(columnStats);
+            }
+
+            assertQuery(String.format("SELECT t1.id, t2.name FROM %s t1 INNER JOIN %s t2 ON t1.id = t2.id ORDER BY t1.id", tableName1, tableName2),
+                    "VALUES(1, '1001'), (2, '1002'), (3, '1003')");
+        }
+        finally {
+            assertUpdate(String.format("DROP TABLE IF EXISTS %s", tableName2));
+            assertUpdate(String.format("DROP TABLE IF EXISTS %s", tableName1));
         }
     }
 }

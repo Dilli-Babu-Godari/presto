@@ -69,15 +69,15 @@ struct LocalShuffleReadInfo {
 /// multi-process use scenarios as long as each producer or consumer is assigned
 /// to a distinct group of partition IDs. Each of them can create an instance of
 /// this class (pointing to the same root path) to read and write shuffle data.
-class LocalPersistentShuffleWriter : public ShuffleWriter {
+class LocalShuffleWriter : public ShuffleWriter {
  public:
-  LocalPersistentShuffleWriter(
+  LocalShuffleWriter(
       const std::string& rootPath,
       const std::string& queryId,
       uint32_t shuffleId,
       uint32_t numPartitions,
       uint64_t maxBytesPerPartition,
-      velox::memory::MemoryPool* FOLLY_NONNULL pool);
+      velox::memory::MemoryPool* pool);
 
   void collect(
       int32_t partition,
@@ -109,7 +109,7 @@ class LocalPersistentShuffleWriter : public ShuffleWriter {
 
   // Used to make sure files created by this thread have unique names.
   const std::thread::id threadId_;
-  velox::memory::MemoryPool* FOLLY_NONNULL pool_;
+  velox::memory::MemoryPool* pool_;
   const uint32_t numPartitions_;
   const uint64_t maxBytesPerPartition_;
   // The top directory of the shuffle files and its file system.
@@ -123,15 +123,16 @@ class LocalPersistentShuffleWriter : public ShuffleWriter {
   std::shared_ptr<velox::filesystems::FileSystem> fileSystem_;
 };
 
-class LocalPersistentShuffleReader : public ShuffleReader {
+class LocalShuffleReader : public ShuffleReader {
  public:
-  LocalPersistentShuffleReader(
+  LocalShuffleReader(
       const std::string& rootPath,
       const std::string& queryId,
       std::vector<std::string> partitionIds,
-      velox::memory::MemoryPool* FOLLY_NONNULL pool);
+      velox::memory::MemoryPool* pool);
 
-  folly::SemiFuture<velox::BufferPtr> next() override;
+  folly::SemiFuture<std::vector<std::unique_ptr<ReadBatch>>> next(
+      size_t numBatches) override;
 
   void noMoreData(bool success) override;
 
@@ -147,7 +148,7 @@ class LocalPersistentShuffleReader : public ShuffleReader {
   const std::string rootPath_;
   const std::string queryId_;
   const std::vector<std::string> partitionIds_;
-  velox::memory::MemoryPool* FOLLY_NONNULL pool_;
+  velox::memory::MemoryPool* pool_;
 
   // Latest read block (file) index in 'readPartitionFiles_' for 'partition_'.
   size_t readPartitionFileIndex_{0};
@@ -165,11 +166,11 @@ class LocalPersistentShuffleFactory : public ShuffleInterfaceFactory {
   std::shared_ptr<ShuffleReader> createReader(
       const std::string& serializedStr,
       const int32_t partition,
-      velox::memory::MemoryPool* FOLLY_NONNULL pool) override;
+      velox::memory::MemoryPool* pool) override;
 
   std::shared_ptr<ShuffleWriter> createWriter(
       const std::string& serializedStr,
-      velox::memory::MemoryPool* FOLLY_NONNULL pool) override;
+      velox::memory::MemoryPool* pool) override;
 };
 
 } // namespace facebook::presto::operators

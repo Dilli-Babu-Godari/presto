@@ -28,6 +28,7 @@
 #include "presto_cpp/main/common/Utils.h"
 #include "presto_cpp/main/connectors/Registration.h"
 #include "presto_cpp/main/connectors/SystemConnector.h"
+#include "presto_cpp/main/connectors/hive/functions/HiveFunctionRegistration.h"
 #include "presto_cpp/main/functions/FunctionMetadata.h"
 #include "presto_cpp/main/http/HttpConstants.h"
 #include "presto_cpp/main/http/filters/AccessLogFilter.h"
@@ -36,10 +37,10 @@
 #include "presto_cpp/main/http/filters/StatsFilter.h"
 #include "presto_cpp/main/operators/BroadcastExchangeSource.h"
 #include "presto_cpp/main/operators/BroadcastWrite.h"
-#include "presto_cpp/main/operators/LocalPersistentShuffle.h"
+#include "presto_cpp/main/operators/LocalShuffle.h"
 #include "presto_cpp/main/operators/PartitionAndSerialize.h"
+#include "presto_cpp/main/operators/ShuffleExchangeSource.h"
 #include "presto_cpp/main/operators/ShuffleRead.h"
-#include "presto_cpp/main/operators/UnsafeRowExchangeSource.h"
 #include "presto_cpp/main/types/PrestoToVeloxQueryPlan.h"
 #include "presto_cpp/main/types/VeloxPlanConversion.h"
 #include "velox/common/base/Counters.h"
@@ -50,6 +51,7 @@
 #include "velox/common/file/FileSystems.h"
 #include "velox/common/memory/SharedArbitrator.h"
 #include "velox/connectors/Connector.h"
+#include "velox/connectors/hive/HiveConnector.h"
 #include "velox/connectors/hive/storage_adapters/abfs/RegisterAbfsFileSystem.h"
 #include "velox/connectors/hive/storage_adapters/gcs/RegisterGcsFileSystem.h"
 #include "velox/connectors/hive/storage_adapters/hdfs/RegisterHdfsFileSystem.h"
@@ -161,6 +163,8 @@ void registerVeloxCudf() {
   // Disable by default.
   velox::cudf_velox::CudfConfig::getInstance().enabled = false;
   auto systemConfig = SystemConfig::instance();
+  velox::cudf_velox::CudfConfig::getInstance().functionNamePrefix =
+      systemConfig->prestoDefaultNamespacePrefix();
   if (systemConfig->values().contains(
           velox::cudf_velox::CudfConfig::kCudfEnabled)) {
     velox::cudf_velox::CudfConfig::getInstance().initialize(
@@ -451,7 +455,7 @@ void PrestoServer::run() {
       });
 
   velox::exec::ExchangeSource::registerFactory(
-      operators::UnsafeRowExchangeSource::createExchangeSource);
+      operators::ShuffleExchangeSource::createExchangeSource);
 
   // Batch broadcast exchange source.
   velox::exec::ExchangeSource::registerFactory(
@@ -1357,6 +1361,12 @@ void PrestoServer::registerFunctions() {
       prestoBuiltinFunctionPrefix_);
   velox::window::prestosql::registerAllWindowFunctions(
       prestoBuiltinFunctionPrefix_);
+
+  if (velox::connector::hasConnector(
+          velox::connector::hive::HiveConnectorFactory::kHiveConnectorName) ||
+      velox::connector::hasConnector("hive-hadoop2")) {
+    hive::functions::registerHiveNativeFunctions();
+  }
 }
 
 void PrestoServer::registerRemoteFunctions() {
@@ -1530,7 +1540,7 @@ void PrestoServer::checkOverload() {
       systemConfig->workerOverloadedThresholdMemGb() * 1024 * 1024 * 1024;
   if (overloadedThresholdMemBytes > 0) {
     const auto currentUsedMemoryBytes = (memoryChecker_ != nullptr)
-        ? memoryChecker_->cachedSystemUsedMemoryBytes()
+        ? memoryChecker_->systemUsedMemoryBytes()
         : 0;
     const bool memOverloaded =
         (currentUsedMemoryBytes > overloadedThresholdMemBytes);
@@ -1688,6 +1698,18 @@ void PrestoServer::registerSidecarEndpoints() {
          const std::vector<std::unique_ptr<folly::IOBuf>>& /*body*/,
          proxygen::ResponseHandler* downstream) {
         http::sendOkResponse(downstream, getFunctionsMetadata());
+      });
+  httpServer_->registerGet(
+      R"(/v1/functions/([^/]+))",
+      [](proxygen::HTTPMessage* /*message*/,
+         const std::vector<std::string>& pathMatch) {
+        return new http::CallbackRequestHandler(
+            [catalog = pathMatch[1]](
+                proxygen::HTTPMessage* /*message*/,
+                std::vector<std::unique_ptr<folly::IOBuf>>& /*body*/,
+                proxygen::ResponseHandler* downstream) {
+              http::sendOkResponse(downstream, getFunctionsMetadata(catalog));
+            });
       });
   httpServer_->registerPost(
       "/v1/velox/plan",
