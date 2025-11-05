@@ -65,22 +65,20 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-
 /**
  * Utility class for building vector indexes from Iceberg table data.
  */
 public class IcebergVectorIndexBuilder
 {
     private static final Logger log = Logger.get(IcebergVectorIndexBuilder.class);
-    // Default directory for storing vector indexes on local system
-    private static final String DEFAULT_INDEX_DIR = System.getProperty("java.io.tmpdir") + "/presto-vector-indexes";
+    private static final String VECTOR_INDEX_BASE_DIR = "/tmp/vector_indexes";
 
     private IcebergVectorIndexBuilder() {}
 
     /**
      * Builds a vector index from an Iceberg table column and saves it to a file.
      * The index is saved to a path in the local filesystem:
-     * [java.io.tmpdir]/presto-vector-indexes/[schema_name]/[table_name]/[column_name]/index.hnsw
+     * /tmp/vector_indexes/[index_name]-[snapshot_id]-[timestamp].idx
      *
      * @param metadata The connector metadata
      * @param pageSourceProvider The page source provider
@@ -88,6 +86,8 @@ public class IcebergVectorIndexBuilder
      * @param session The connector session
      * @param schemaTableName The schema and table name
      * @param columnName The name of the column containing vector data
+     * @param indexName The name of the index
+     * @param catalogName The catalog name
      * @param similarityFunction The similarity function to use for the index
      * @param m The maximum number of connections per node in the graph
      * @param efConstruction The size of the dynamic candidate list during construction
@@ -108,19 +108,15 @@ public class IcebergVectorIndexBuilder
     {
         // 1. Get the Iceberg table
         Table icebergTable = IcebergUtil.getIcebergTable(metadata, session, schemaTableName);
-        // Use a fixed local directory for storing vector indexes
-        String schemaName = schemaTableName.getSchemaName();
-        String tableName = schemaTableName.getTableName();
-        // Use the index name in the path, and include catalog name if available
-        Path outputPath;
-        if (catalogName != null) {
-            outputPath = Paths.get(DEFAULT_INDEX_DIR, catalogName, schemaName, tableName, indexName + ".hnsw");
-            log.info("Using catalog name '%s' in index path", catalogName);
-        }
-        else {
-            outputPath = Paths.get(DEFAULT_INDEX_DIR, schemaName, tableName, indexName + ".hnsw");
-        }
-        log.info("Vector index will be saved to local path: %s", outputPath);
+
+        // Compute the local filesystem path for the index
+        // Simple path format: /tmp/vector_indexes/[index_name]-[snapshot_id]-[timestamp].hnsw
+        Path indexDirPath = Paths.get(VECTOR_INDEX_BASE_DIR);
+        String indexFileName = indexName + ".hnsw";
+        Path indexPath = indexDirPath.resolve(indexFileName);
+        // Create the directory if it doesn't exist
+        Files.createDirectories(indexDirPath);
+        log.info("Vector index will be saved to local path: %s", indexPath);
         // 2. Read vectors from the specified column
         List<float[]> vectors = readVectorsFromTable(
                 metadata,
@@ -150,22 +146,11 @@ public class IcebergVectorIndexBuilder
         GraphIndexBuilder builder = new GraphIndexBuilder(bsp, ravv.dimension(), m, efConstruction, 4 * m, 1.2f, false, true);
         ImmutableGraphIndex index = builder.build(ravv);
         log.info("Vector index built successfully with %d nodes", index.size());
-        // 6. Save index to disk
-        if (outputPath.getParent() != null) {
-            Files.createDirectories(outputPath.getParent());
-        }
-
-        // Save the index using OnDiskGraphIndex.write method
-        try {
-            log.info("Saving index using OnDiskGraphIndex.write method");
-            OnDiskGraphIndex.write(index, ravv, outputPath);
-            log.info("Vector index saved to %s", outputPath);
-            return outputPath;
-        }
-        catch (Exception e) {
-            log.error(e, "Error saving index: %s", e.getMessage());
-            throw e;
-        }
+        // 6. Save index directly to local filesystem
+        log.info("Writing index to filesystem: %s", indexPath);
+        OnDiskGraphIndex.write(index, ravv, indexPath);
+        log.info("Vector index saved successfully to %s", indexPath);
+        return indexPath;
     }
     private static VectorSimilarityFunction getVectorSimilarityFunction(String similarityFunction)
     {
