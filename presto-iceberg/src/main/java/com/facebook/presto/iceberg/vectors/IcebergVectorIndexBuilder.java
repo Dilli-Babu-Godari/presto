@@ -55,8 +55,11 @@ import org.apache.iceberg.PartitionSpecParser;
 import org.apache.iceberg.Table;
 import org.apache.iceberg.TableScan;
 import org.apache.iceberg.io.CloseableIterable;
+import org.apache.iceberg.io.FileIO;
+import org.apache.iceberg.io.OutputFile;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -71,14 +74,15 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 public class IcebergVectorIndexBuilder
 {
     private static final Logger log = Logger.get(IcebergVectorIndexBuilder.class);
-    private static final String VECTOR_INDEX_BASE_DIR = "/tmp/vector_indexes";
+    private static final String VECTOR_INDEX_DIR = ".vector_index";
 
     private IcebergVectorIndexBuilder() {}
 
     /**
-     * Builds a vector index from an Iceberg table column and saves it to a file.
-     * The index is saved to a path in the local filesystem:
-     * /tmp/vector_indexes/[index_name]-[snapshot_id]-[timestamp].idx
+     * Builds a vector index from an Iceberg table column and saves it to S3.
+     * The index is saved to the table's data location using Iceberg's FileIO,
+     * which automatically handles S3 configuration.
+     * Path format: [table_data_location]/.vector_index/[index_name]-[snapshot_id].hnsw
      *
      * @param metadata The connector metadata
      * @param pageSourceProvider The page source provider
@@ -108,15 +112,21 @@ public class IcebergVectorIndexBuilder
     {
         // 1. Get the Iceberg table
         Table icebergTable = IcebergUtil.getIcebergTable(metadata, session, schemaTableName);
-
-        // Compute the local filesystem path for the index
-        // Simple path format: /tmp/vector_indexes/[index_name]-[snapshot_id]-[timestamp].hnsw
-        Path indexDirPath = Paths.get(VECTOR_INDEX_BASE_DIR);
-        String indexFileName = indexName + ".hnsw";
-        Path indexPath = indexDirPath.resolve(indexFileName);
-        // Create the directory if it doesn't exist
-        Files.createDirectories(indexDirPath);
-        log.info("Vector index will be saved to local path: %s", indexPath);
+        // Get the table's FileIO for S3 operations (works with both MinIO and CPD S3)
+        FileIO fileIO = icebergTable.io();
+        // Get the table's location
+        String tableLocation = icebergTable.location();
+        // Get current snapshot ID if available
+        String snapshotIdStr = "";
+        if (icebergTable.currentSnapshot() != null) {
+            snapshotIdStr = "-" + icebergTable.currentSnapshot().snapshotId();
+        }
+        // Compute the S3 path for the index under table's location
+        String indexDirPath = tableLocation + "/" + VECTOR_INDEX_DIR;
+        String indexFileName = indexName + snapshotIdStr + ".hnsw";
+        String indexPath = indexDirPath + "/" + indexFileName;
+        log.info("Vector index will be saved to S3 path: %s", indexPath);
+        log.info("Table location: %s", tableLocation);
         // 2. Read vectors from the specified column
         List<float[]> vectors = readVectorsFromTable(
                 metadata,
@@ -146,11 +156,57 @@ public class IcebergVectorIndexBuilder
         GraphIndexBuilder builder = new GraphIndexBuilder(bsp, ravv.dimension(), m, efConstruction, 4 * m, 1.2f, false, true);
         ImmutableGraphIndex index = builder.build(ravv);
         log.info("Vector index built successfully with %d nodes", index.size());
-        // 6. Save index directly to local filesystem
-        log.info("Writing index to filesystem: %s", indexPath);
-        OnDiskGraphIndex.write(index, ravv, indexPath);
-        log.info("Vector index saved successfully to %s", indexPath);
-        return indexPath;
+        // 6. Save index to S3 using Iceberg's FileIO with retry logic
+        int maxRetries = 3;
+        int retryDelayMs = 1000;
+        Path localTempPath = null;
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                log.info("Saving index to S3 (attempt %d of %d)", attempt, maxRetries);
+                // Create a local temporary file for the index since
+                localTempPath = Files.createTempFile("vector-index-", ".tmp");
+                try {
+                    // Write the index to local temporary file OnDiskGraphIndex just accepts the Java Path.
+                    log.info("Writing index to local temporary file: %s", localTempPath);
+                    OnDiskGraphIndex.write(index, ravv, localTempPath);
+                    // Upload directly to final S3
+                    log.info("Uploading index to S3: %s", indexPath);
+                    OutputFile outputFile = fileIO.newOutputFile(indexPath);
+                    try (OutputStream out = outputFile.create()) {
+                        Files.copy(localTempPath, out);
+                    }
+                    log.info("Vector index saved successfully to S3: %s", indexPath);
+                    return Paths.get(indexPath);
+                }
+                finally {
+                    // Clean up local temporary file
+                    if (localTempPath != null) {
+                        try {
+                            Files.delete(localTempPath);
+                        }
+                        catch (IOException e) {
+                            log.warn(e, "Failed to delete local temporary file: %s", localTempPath);
+                        }
+                    }
+                }
+            }
+            catch (Exception e) {
+                log.error(e, "Error saving index to S3 (attempt %d of %d): %s",
+                        attempt, maxRetries, e.getMessage());
+                if (attempt < maxRetries) {
+                    try {
+                        Thread.sleep(retryDelayMs * attempt);
+                    }
+                    catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+                else {
+                    throw new RuntimeException("Failed to save vector index to S3 after " + maxRetries + " attempts", e);
+                }
+            }
+        }
+        throw new RuntimeException("Failed to save vector index to S3 after " + maxRetries + " attempts");
     }
     private static VectorSimilarityFunction getVectorSimilarityFunction(String similarityFunction)
     {
