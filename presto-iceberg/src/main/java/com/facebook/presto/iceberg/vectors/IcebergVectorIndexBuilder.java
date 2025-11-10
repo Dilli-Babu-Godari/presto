@@ -55,8 +55,8 @@ import org.apache.iceberg.PartitionSpecParser;
 import org.apache.iceberg.Table;
 import org.apache.iceberg.TableScan;
 import org.apache.iceberg.io.CloseableIterable;
-import org.apache.iceberg.io.FileIO;
-import org.apache.iceberg.io.OutputFile;
+import com.facebook.presto.iceberg.HdfsFileIO;
+import com.facebook.presto.iceberg.HdfsOutputFile;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -112,8 +112,8 @@ public class IcebergVectorIndexBuilder
     {
         // 1. Get the Iceberg table
         Table icebergTable = IcebergUtil.getIcebergTable(metadata, session, schemaTableName);
-        // Get the table's FileIO for S3 operations (works with both MinIO and CPD S3)
-        FileIO fileIO = icebergTable.io();
+        // Get the table's HdfsFileIO for S3 operations
+        HdfsFileIO hdfsFileIO = (HdfsFileIO) icebergTable.io();
         // Get the table's location
         String tableLocation = icebergTable.location();
         // Get current snapshot ID if available
@@ -169,9 +169,9 @@ public class IcebergVectorIndexBuilder
                     // Write the index to local temporary file OnDiskGraphIndex just accepts the Java Path.
                     log.info("Writing index to local temporary file: %s", localTempPath);
                     OnDiskGraphIndex.write(index, ravv, localTempPath);
-                    // Upload directly to final S3
+                    // Upload directly to S3
                     log.info("Uploading index to S3: %s", indexPath);
-                    OutputFile outputFile = fileIO.newOutputFile(indexPath);
+                    HdfsOutputFile outputFile = (HdfsOutputFile) hdfsFileIO.newOutputFile(indexPath);
                     try (OutputStream out = outputFile.create()) {
                         Files.copy(localTempPath, out);
                     }
