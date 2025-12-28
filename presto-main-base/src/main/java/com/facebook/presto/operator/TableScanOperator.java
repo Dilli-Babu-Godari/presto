@@ -269,6 +269,7 @@ public class TableScanOperator
             page = page.getLoadedPage();
         }
 
+        operatorContext.recordProcessedInput(page.getSizeInBytes(), page.getPositionCount());
         // update operator stats
         recordInputStats();
 
@@ -288,7 +289,6 @@ public class TableScanOperator
         long inputBytes = endCompletedBytes - completedBytes;
         long inputBytesReadTime = endReadTimeNanos - readTimeNanos;
         long positionCount = endCompletedPositions - completedPositions;
-        operatorContext.recordProcessedInput(inputBytes, positionCount);
         operatorContext.recordRawInputWithTiming(inputBytes, positionCount, inputBytesReadTime);
         RuntimeStats runtimeStats = source.getRuntimeStats();
         if (runtimeStats != null) {

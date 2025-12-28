@@ -361,7 +361,6 @@ public class ScanFilterAndProjectOperator
         long inputBytes = endCompletedBytes - completedBytes;
         long inputBytesReadTime = endReadTimeNanos - readTimeNanos;
         long positionCount = endCompletedPositions - completedPositions;
-        operatorContext.recordProcessedInput(inputBytes, positionCount);
         operatorContext.recordRawInputWithTiming(inputBytes, positionCount, inputBytesReadTime);
         RuntimeStats runtimeStats = pageSource.getRuntimeStats();
         if (runtimeStats != null) {
@@ -391,6 +390,10 @@ public class ScanFilterAndProjectOperator
                 blockSizeSum += block.getSizeInBytes();
             }
         }
+        // Record processed input from the actual page (after filtering)
+        operatorContext.recordProcessedInput(blockSizeSum, page.getPositionCount());
+        // Record raw input from pageSource (before filtering)
+        recordInputStats();
 
         return (blocks == null) ? page : new Page(page.getPositionCount(), blocks);
     }
