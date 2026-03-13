@@ -13,38 +13,36 @@
  */
 package com.facebook.presto.plugin.sqlserver;
 
-import com.facebook.presto.plugin.jdbc.BaseJdbcConfig;
 import com.facebook.presto.plugin.jdbc.JdbcClient;
+import com.facebook.presto.plugin.jdbc.JdbcMetadata;
 import com.facebook.presto.plugin.jdbc.JdbcMetadataCache;
 import com.facebook.presto.plugin.jdbc.JdbcMetadataConfig;
 import com.facebook.presto.plugin.jdbc.JdbcMetadataFactory;
 import com.facebook.presto.plugin.jdbc.TableLocationProvider;
-import com.google.inject.Binder;
-import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.Scopes;
-import com.google.inject.Singleton;
+import jakarta.inject.Inject;
 
-import static com.facebook.airlift.configuration.ConfigBinder.configBinder;
-
-public class SqlServerClientModule
-        implements Module
+/**
+ * SQL Server-specific metadata factory that creates SqlServerMetadata instances.
+ */
+public class SqlServerMetadataFactory
+        extends JdbcMetadataFactory
 {
-    @Override
-    public void configure(Binder binder)
-    {
-        binder.bind(JdbcClient.class).to(SqlServerClient.class).in(Scopes.SINGLETON);
-        configBinder(binder).bindConfig(BaseJdbcConfig.class);
-    }
+    private final SqlServerClient sqlServerClient;
 
-    @Provides
-    @Singleton
-    public JdbcMetadataFactory createJdbcMetadataFactory(
+    @Inject
+    public SqlServerMetadataFactory(
             JdbcMetadataCache jdbcMetadataCache,
             JdbcClient jdbcClient,
             JdbcMetadataConfig config,
             TableLocationProvider tableLocationProvider)
     {
-        return new SqlServerMetadataFactory(jdbcMetadataCache, jdbcClient, config, tableLocationProvider);
+        super(jdbcMetadataCache, jdbcClient, config, tableLocationProvider);
+        this.sqlServerClient = (SqlServerClient) jdbcClient;
+    }
+
+    @Override
+    protected JdbcMetadata createMetadata()
+    {
+        return new SqlServerMetadata(jdbcMetadataCache, sqlServerClient, allowDropTable, tableLocationProvider);
     }
 }
