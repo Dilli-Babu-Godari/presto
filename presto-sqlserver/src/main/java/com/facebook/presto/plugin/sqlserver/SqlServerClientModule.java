@@ -15,6 +15,7 @@ package com.facebook.presto.plugin.sqlserver;
 
 import com.facebook.presto.plugin.jdbc.BaseJdbcConfig;
 import com.facebook.presto.plugin.jdbc.JdbcClient;
+import com.facebook.presto.plugin.jdbc.JdbcMetadataFactory;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Scopes;
@@ -28,6 +29,7 @@ public class SqlServerClientModule
     public void configure(Binder binder)
     {
         binder.bind(JdbcClient.class).to(SqlServerClient.class).in(Scopes.SINGLETON);
+        binder.bind(JdbcMetadataFactory.class).to(SqlServerMetadataFactory.class).in(Scopes.SINGLETON);
         configBinder(binder).bindConfig(BaseJdbcConfig.class);
     }
 }

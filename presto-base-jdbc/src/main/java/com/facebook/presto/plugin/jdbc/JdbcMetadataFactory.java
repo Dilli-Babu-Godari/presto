@@ -19,10 +19,10 @@ import static java.util.Objects.requireNonNull;
 
 public class JdbcMetadataFactory
 {
-    private final JdbcMetadataCache jdbcMetadataCache;
-    private final JdbcClient jdbcClient;
-    private final boolean allowDropTable;
-    private final TableLocationProvider tableLocationProvider;
+    protected final JdbcMetadataCache jdbcMetadataCache;
+    protected final JdbcClient jdbcClient;
+    protected final boolean allowDropTable;
+    protected final TableLocationProvider tableLocationProvider;
 
     @Inject
     public JdbcMetadataFactory(JdbcMetadataCache jdbcMetadataCache, JdbcClient jdbcClient, JdbcMetadataConfig config, TableLocationProvider tableLocationProvider)
@@ -35,6 +35,11 @@ public class JdbcMetadataFactory
     }
 
     public JdbcMetadata create()
+    {
+        return createMetadata();
+    }
+
+    protected JdbcMetadata createMetadata()
     {
         return new JdbcMetadata(jdbcMetadataCache, jdbcClient, allowDropTable, tableLocationProvider);
     }
