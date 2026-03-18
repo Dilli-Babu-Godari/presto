@@ -350,6 +350,12 @@ public class ClientSession
             return this;
         }
 
+        public Builder withTimeZone(String timeZoneId)
+        {
+            this.timeZone = TimeZoneKey.getTimeZoneKey(requireNonNull(timeZoneId, "timeZoneId is null"));
+            return this;
+        }
+
         public Builder withRoles(Map<String, SelectedRole> roles)
         {
             this.roles = roles;

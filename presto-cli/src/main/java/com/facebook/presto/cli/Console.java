@@ -344,6 +344,12 @@ public class Console
                 sessionProperties.putAll(query.getSetSessionProperties());
                 sessionProperties.keySet().removeAll(query.getResetSessionProperties());
                 builder = builder.withProperties(sessionProperties);
+
+                // Sync timeZone with time_zone_id property if set
+                if (sessionProperties.containsKey("time_zone_id")) {
+                    String timeZoneId = sessionProperties.get("time_zone_id");
+                    builder = builder.withTimeZone(timeZoneId);
+                }
             }
 
             // update session roles
