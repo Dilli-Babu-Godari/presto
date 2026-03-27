@@ -189,6 +189,7 @@ import com.facebook.presto.sql.tree.SelectItem;
 import com.facebook.presto.sql.tree.SetOperation;
 import com.facebook.presto.sql.tree.SetProperties;
 import com.facebook.presto.sql.tree.SetSession;
+import com.facebook.presto.sql.tree.SetTimeZone;
 import com.facebook.presto.sql.tree.SimpleGroupBy;
 import com.facebook.presto.sql.tree.SingleColumn;
 import com.facebook.presto.sql.tree.SortItem;
@@ -1098,6 +1099,12 @@ class StatementAnalyzer
 
         @Override
         protected Scope visitSetSession(SetSession node, Optional<Scope> scope)
+        {
+            return createAndAssignScope(node, scope);
+        }
+
+        @Override
+        protected Scope visitSetTimeZone(SetTimeZone node, Optional<Scope> scope)
         {
             return createAndAssignScope(node, scope);
         }

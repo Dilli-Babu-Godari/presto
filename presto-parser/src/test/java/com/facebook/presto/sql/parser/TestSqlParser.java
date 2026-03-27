@@ -136,6 +136,7 @@ import com.facebook.presto.sql.tree.SelectItem;
 import com.facebook.presto.sql.tree.SetProperties;
 import com.facebook.presto.sql.tree.SetRole;
 import com.facebook.presto.sql.tree.SetSession;
+import com.facebook.presto.sql.tree.SetTimeZone;
 import com.facebook.presto.sql.tree.ShowCatalogs;
 import com.facebook.presto.sql.tree.ShowColumns;
 import com.facebook.presto.sql.tree.ShowCreate;
@@ -737,6 +738,19 @@ public class TestSqlParser
     {
         assertStatement("RESET SESSION foo.bar", new ResetSession(QualifiedName.of("foo", "bar")));
         assertStatement("RESET SESSION foo", new ResetSession(QualifiedName.of("foo")));
+    }
+
+    @Test
+    public void testSetTimeZone()
+    {
+        assertStatement("SET TIME ZONE 'America/Los_Angeles'",
+                new SetTimeZone(Optional.of(new StringLiteral("America/Los_Angeles")), false));
+        assertStatement("SET TIME ZONE '+05:30'",
+                new SetTimeZone(Optional.of(new StringLiteral("+05:30")), false));
+        assertStatement("SET TIME ZONE LOCAL",
+                new SetTimeZone(Optional.empty(), true));
+        assertStatement("SET TIME ZONE 'UTC'",
+                new SetTimeZone(Optional.of(new StringLiteral("UTC")), false));
     }
 
     @Test

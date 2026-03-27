@@ -187,6 +187,11 @@ public abstract class AstVisitor<R, C>
         return visitStatement(node, context);
     }
 
+    protected R visitSetTimeZone(SetTimeZone node, C context)
+    {
+        return visitStatement(node, context);
+    }
+
     protected R visitResetSession(ResetSession node, C context)
     {
         return visitStatement(node, context);

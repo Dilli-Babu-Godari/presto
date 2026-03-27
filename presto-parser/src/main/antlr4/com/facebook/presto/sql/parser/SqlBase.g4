@@ -156,6 +156,7 @@ statement
         (LIKE pattern=string (ESCAPE escape=string)?)?                 #showSession
     | SET SESSION qualifiedName EQ expression                          #setSession
     | RESET SESSION qualifiedName                                      #resetSession
+    | SET TIME ZONE (LOCAL | expression)                               #setTimeZone
     | START TRANSACTION (transactionMode (',' transactionMode)*)?      #startTransaction
     | COMMIT WORK?                                                     #commit
     | ROLLBACK WORK?                                                   #rollback

@@ -45,11 +45,36 @@ public class TestTimeZoneSessionProperty
     }
 
     @Test
+    public void testSetTimeZoneSyntaxWithNamedZone()
+    {
+        MaterializedResult result = computeActual("SET TIME ZONE 'America/Los_Angeles'");
+        assertEquals(result.getRowCount(), 1);
+        assertTrue(result.toString().contains("setSessionProperties={time_zone_id=America/Los_Angeles}"));
+    }
+
+    @Test
     public void testSetTimeZoneIdWithOffset()
     {
         MaterializedResult result = computeActual("SET SESSION time_zone_id = '+05:30'");
         assertEquals(result.getRowCount(), 1);
         assertTrue(result.toString().contains("setSessionProperties={time_zone_id=+05:30}"));
+    }
+
+    @Test
+    public void testSetTimeZoneSyntaxWithOffset()
+    {
+        MaterializedResult result = computeActual("SET TIME ZONE '+05:30'");
+        assertEquals(result.getRowCount(), 1);
+        assertTrue(result.toString().contains("setSessionProperties={time_zone_id=+05:30}"));
+    }
+
+    @Test
+    public void testSetTimeZoneLocal()
+    {
+        MaterializedResult result = computeActual("SET TIME ZONE LOCAL");
+        assertEquals(result.getRowCount(), 1);
+        // LOCAL should set to the session's default time zone
+        assertTrue(result.toString().contains("setSessionProperties={time_zone_id="));
     }
 
     @DataProvider(name = "invalidTimezones")
@@ -70,6 +95,12 @@ public class TestTimeZoneSessionProperty
         assertQueryFails("SET SESSION time_zone_id = '" + timezone + "'", ".*Invalid time zone.*");
     }
 
+    @Test(dataProvider = "invalidTimezones")
+    public void testInvalidTimeZoneWithSetTimeZoneSyntax(String timezone)
+    {
+        assertQueryFails("SET TIME ZONE '" + timezone + "'", ".*Invalid time zone.*");
+    }
+
     @DataProvider(name = "validTimezoneValues")
     public Object[][] currentTimezoneValuesProvider()
     {
@@ -83,6 +114,22 @@ public class TestTimeZoneSessionProperty
     @Test(dataProvider = "validTimezoneValues")
     public void testCurrentTimezoneReflectsUpdatedValue(String timezone)
     {
+        Session session = Session.builder(getQueryRunner().getDefaultSession())
+                .setSystemProperty("time_zone_id", timezone)
+                .build();
+
+        MaterializedResult result = computeActual(session, "SELECT current_timezone()");
+        String actualTimezone = (String) result.getMaterializedRows().get(0).getField(0);
+        assertEquals(actualTimezone, timezone);
+    }
+
+    @Test(dataProvider = "validTimezoneValues")
+    public void testCurrentTimezoneWithSetTimeZoneSyntax(String timezone)
+    {
+        // First set the time zone using SET TIME ZONE syntax
+        computeActual("SET TIME ZONE '" + timezone + "'");
+        
+        // Then verify current_timezone() returns the expected value
         Session session = Session.builder(getQueryRunner().getDefaultSession())
                 .setSystemProperty("time_zone_id", timezone)
                 .build();
