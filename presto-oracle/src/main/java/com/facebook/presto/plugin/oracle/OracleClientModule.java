@@ -66,11 +66,12 @@ public class OracleClientModule
             }
         }
         connectionProperties.setProperty(OracleConnection.CONNECTION_PROPERTY_INCLUDE_SYNONYMS, String.valueOf(oracleConfig.isSynonymsEnabled()));
-        return new DriverConnectionFactory(
+        ConnectionFactory driverConnectionFactory = new DriverConnectionFactory(
                 new OracleDriver(),
                 config.getConnectionUrl(),
                 Optional.empty(),
                 Optional.empty(),
                 connectionProperties);
+        return new OracleConnectionFactory(driverConnectionFactory, config.getFetchSize());
     }
 }

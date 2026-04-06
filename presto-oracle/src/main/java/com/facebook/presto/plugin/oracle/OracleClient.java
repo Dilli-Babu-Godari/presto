@@ -39,7 +39,6 @@ import com.facebook.presto.spi.statistics.Estimate;
 import com.facebook.presto.spi.statistics.TableStatistics;
 import com.google.common.collect.Maps;
 import jakarta.inject.Inject;
-import oracle.jdbc.OracleConnection;
 import oracle.jdbc.OracleTypes;
 
 import java.sql.Connection;
@@ -84,7 +83,6 @@ public class OracleClient
         extends BaseJdbcClient
 {
     private static final Logger LOG = Logger.get(OracleClient.class);
-    private final int fetchSize;
 
     private final boolean synonymsEnabled;
     private final int numberDefaultScale;
@@ -101,7 +99,6 @@ public class OracleClient
         requireNonNull(oracleConfig, "oracle config is null");
         this.synonymsEnabled = oracleConfig.isSynonymsEnabled();
         this.numberDefaultScale = oracleConfig.getNumberDefaultScale();
-        this.fetchSize = config.getFetchSize();
     }
 
     private String[] getTableTypes()
@@ -116,10 +113,6 @@ public class OracleClient
     protected ResultSet getTables(Connection connection, Optional<String> schemaName, Optional<String> tableName)
             throws SQLException
     {
-        if (connection.isWrapperFor(OracleConnection.class)) {
-            OracleConnection oracleConnection = connection.unwrap(OracleConnection.class);
-            oracleConnection.setDefaultRowPrefetch(fetchSize);
-        }
         DatabaseMetaData metadata = connection.getMetaData();
         String escape = metadata.getSearchStringEscape();
         ResultSet resultSet = metadata.getTables(
@@ -134,10 +127,6 @@ public class OracleClient
     public PreparedStatement getPreparedStatement(ConnectorSession session, Connection connection, String sql)
             throws SQLException
     {
-        if (connection.isWrapperFor(OracleConnection.class)) {
-            OracleConnection oracleConnection = connection.unwrap(OracleConnection.class);
-            oracleConnection.setDefaultRowPrefetch(fetchSize);
-        }
         return connection.prepareStatement(sql);
     }
 
