@@ -48,7 +48,17 @@ public class OracleConnectionFactory
         // Set Oracle-specific default row prefetch for optimal performance
         if (connection.isWrapperFor(OracleConnection.class)) {
             OracleConnection oracleConnection = connection.unwrap(OracleConnection.class);
+
+            int beforeFetch = oracleConnection.getDefaultRowPrefetch();
+            System.out.println("=== ORACLE FETCH SIZE DEBUG ===");
+            System.out.println("BEFORE setDefaultRowPrefetch: " + beforeFetch);
+
             oracleConnection.setDefaultRowPrefetch(fetchSize);
+
+            int afterFetch = oracleConnection.getDefaultRowPrefetch();
+            System.out.println("AFTER setDefaultRowPrefetch: " + afterFetch);
+            System.out.println("Configured fetchSize: " + fetchSize);
+            System.out.println("=== END DEBUG ===");
         }
 
         return connection;
