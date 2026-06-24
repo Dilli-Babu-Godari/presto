@@ -26,7 +26,7 @@ public class SingleArrayBlockWriter
         extends AbstractSingleArrayBlock
         implements BlockBuilder
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(SingleArrayBlockWriter.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(SingleArrayBlockWriter.class).instanceSize();
 
     private final BlockBuilder blockBuilder;
     private int positionsWritten;

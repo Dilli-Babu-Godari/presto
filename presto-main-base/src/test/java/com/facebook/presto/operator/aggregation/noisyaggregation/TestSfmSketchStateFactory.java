@@ -34,7 +34,7 @@ public class TestSfmSketchStateFactory
     {
         SfmSketchState state = factory.createSingleState();
         assertNull(state.getSketch());
-        assertEquals(state.getEstimatedSize(), ClassLayout.parseClass(SfmSketchStateFactory.SingleSfmSketchState.class).instanceSize());
+        assertEquals(state.getEstimatedSize(), (int) ClassLayout.parseClass(SfmSketchStateFactory.SingleSfmSketchState.class).instanceSize());
     }
 
     @Test

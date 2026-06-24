@@ -64,7 +64,7 @@ public class PagesRTreeIndex
     public static final class GeometryWithPosition
             implements HasExtent
     {
-        private static final int INSTANCE_SIZE = ClassLayout.parseClass(GeometryWithPosition.class).instanceSize();
+        private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(GeometryWithPosition.class).instanceSize();
 
         private final OGCGeometry ogcGeometry;
         private final int partition;

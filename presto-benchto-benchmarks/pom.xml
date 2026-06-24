@@ -52,7 +52,18 @@
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-validator</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.aspectj</groupId>
+                    <artifactId>aspectjweaver</artifactId>
+                </exclusion>
             </exclusions>
+        </dependency>
+
+        <!-- Upgrade aspectjweaver for Java 25 compatibility -->
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
+            <version>1.9.22.1</version>
         </dependency>
 
         <dependency>
@@ -117,7 +128,9 @@
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
-                    <descriptor>src/assembly/benchmarks.xml</descriptor>
+                    <descriptors>
+                        <descriptor>src/assembly/benchmarks.xml</descriptor>
+                    </descriptors>
                     <finalName>presto-benchto-benchmarks-package-${project.version}</finalName>
                     <appendAssemblyId>false</appendAssemblyId>
                 </configuration>

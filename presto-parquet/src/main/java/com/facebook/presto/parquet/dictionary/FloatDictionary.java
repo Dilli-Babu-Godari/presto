@@ -27,7 +27,7 @@ import static io.airlift.slice.SizeOf.sizeOf;
 public class FloatDictionary
         extends Dictionary
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(FloatDictionary.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(FloatDictionary.class).instanceSize();
 
     private final float[] content;
 

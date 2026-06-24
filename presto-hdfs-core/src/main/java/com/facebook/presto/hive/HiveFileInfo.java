@@ -34,7 +34,7 @@ import static java.util.Objects.requireNonNull;
 public class HiveFileInfo
         implements Comparable
 {
-    private static final long INSTANCE_SIZE = ClassLayout.parseClass(HiveFileInfo.class).instanceSize();
+    private static final long INSTANCE_SIZE = (int) ClassLayout.parseClass(HiveFileInfo.class).instanceSize();
 
     private final String path;
     private final boolean isDirectory;

@@ -25,7 +25,7 @@ import static java.nio.ByteOrder.BIG_ENDIAN;
 public class FixedLenByteArrayUuidPlainValuesDecoder
         implements UuidValuesDecoder
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(FixedLenByteArrayUuidPlainValuesDecoder.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(FixedLenByteArrayUuidPlainValuesDecoder.class).instanceSize();
 
     private final int typeLength;
     private final int bufferEnd;

@@ -24,7 +24,7 @@ import java.util.Map;
 public class EvaluateClassifierPredictionsStateFactory
         implements AccumulatorStateFactory<EvaluateClassifierPredictionsState>
 {
-    private static final long HASH_MAP_SIZE = ClassLayout.parseClass(HashMap.class).instanceSize();
+    private static final long HASH_MAP_SIZE = (int) ClassLayout.parseClass(HashMap.class).instanceSize();
 
     @Override
     public EvaluateClassifierPredictionsState createSingleState()

@@ -157,7 +157,7 @@ public abstract class AbstractTestBlock
                     retainedSize += sizeOf((short[]) field.get(block));
                 }
                 else if (type == DictionaryId.class) {
-                    retainedSize += ClassLayout.parseClass(DictionaryId.class).instanceSize();
+                    retainedSize += (int) ClassLayout.parseClass(DictionaryId.class).instanceSize();
                 }
                 else if (type == HashTables.class) {
                     retainedSize += ((HashTables) field.get(block)).getRetainedSizeInBytes();

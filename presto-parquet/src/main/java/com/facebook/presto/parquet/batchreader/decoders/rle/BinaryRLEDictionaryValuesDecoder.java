@@ -29,7 +29,7 @@ public class BinaryRLEDictionaryValuesDecoder
         extends BaseRLEBitPackedDecoder
         implements BinaryValuesDecoder
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(BinaryRLEDictionaryValuesDecoder.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(BinaryRLEDictionaryValuesDecoder.class).instanceSize();
 
     private final BinaryBatchDictionary dictionary;
 

@@ -72,7 +72,7 @@ public interface KllSketchAggregationState
             .put(boolean.class, new double[] {345.60095530779705, 14.12193288555095})
             .build();
 
-    long SKETCH_INSTANCE_SIZE = ClassLayout.parseClass(KllItemsSketch.class).instanceSize();
+    long SKETCH_INSTANCE_SIZE = (int) ClassLayout.parseClass(KllItemsSketch.class).instanceSize();
 
     @Nullable
     <T> KllItemsSketch<T> getSketch();
@@ -124,7 +124,7 @@ public interface KllSketchAggregationState
     class Single
             implements KllSketchAggregationState
     {
-        private static final long INSTANCE_SIZE = ClassLayout.parseClass(Single.class).instanceSize();
+        private static final long INSTANCE_SIZE = (int) ClassLayout.parseClass(Single.class).instanceSize();
         @Nullable
         private KllItemsSketch sketch;
         private final Type type;
@@ -189,7 +189,7 @@ public interface KllSketchAggregationState
             extends AbstractGroupedAccumulatorState
             implements KllSketchAggregationState
     {
-        private static final int INSTANCE_SIZE = ClassLayout.parseClass(ThetaSketchStateFactory.GroupedThetaSketchState.class).instanceSize();
+        private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(ThetaSketchStateFactory.GroupedThetaSketchState.class).instanceSize();
         private final ObjectBigArray<KllItemsSketch> sketches = new ObjectBigArray<>();
         private long accumulatedSizeInBytes;
 

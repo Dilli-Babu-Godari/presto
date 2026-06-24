@@ -22,7 +22,7 @@ import static java.util.Objects.requireNonNull;
 
 class DictionaryRowGroup
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(DictionaryRowGroup.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(DictionaryRowGroup.class).instanceSize();
 
     private final byte[][] byteSegments;
     private final short[][] shortSegments;

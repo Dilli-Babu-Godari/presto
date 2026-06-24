@@ -32,7 +32,7 @@ public class ArrayBlockBuilder
         extends AbstractArrayBlock
         implements BlockBuilder
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(ArrayBlockBuilder.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(ArrayBlockBuilder.class).instanceSize();
 
     private int positionCount;
 

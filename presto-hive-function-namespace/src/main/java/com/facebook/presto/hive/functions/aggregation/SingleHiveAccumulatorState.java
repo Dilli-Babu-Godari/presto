@@ -23,7 +23,7 @@ import java.util.function.Supplier;
 public final class SingleHiveAccumulatorState
         implements HiveAccumulatorState
 {
-    private static final long INSTANCE_SIZE = ClassLayout.parseClass(SingleHiveAccumulatorState.class).instanceSize();
+    private static final long INSTANCE_SIZE = (int) ClassLayout.parseClass(SingleHiveAccumulatorState.class).instanceSize();
 
     private transient AggregationBuffer buffer;
     private transient AggregationBuffer prevBuffer;

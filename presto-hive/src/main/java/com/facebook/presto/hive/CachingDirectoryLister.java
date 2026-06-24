@@ -215,7 +215,7 @@ public class CachingDirectoryLister
 
     private static class ValueHolder
     {
-        private static final long INSTANCE_SIZE = ClassLayout.parseClass(ValueHolder.class).instanceSize();
+        private static final long INSTANCE_SIZE = (int) ClassLayout.parseClass(ValueHolder.class).instanceSize();
 
         private final List<HiveFileInfo> files;
 

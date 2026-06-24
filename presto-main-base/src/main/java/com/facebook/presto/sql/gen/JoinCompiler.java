@@ -183,7 +183,7 @@ public class JoinCompiler
         FieldDefinition instanceSize = definition.declareField(a(PRIVATE, STATIC, FINAL), "INSTANCE_SIZE", long.class);
         definition.getClassInitializer()
                 .getBody()
-                .comment("INSTANCE_SIZE = ClassLayout.parseClass(%s.class).instanceSize()", definition.getName())
+                .comment("INSTANCE_SIZE = (int) ClassLayout.parseClass(%s.class).instanceSize()", definition.getName())
                 .push(definition.getType())
                 .invokeStatic(ClassLayout.class, "parseClass", ClassLayout.class, Class.class)
                 .invokeVirtual(ClassLayout.class, "instanceSize", int.class)

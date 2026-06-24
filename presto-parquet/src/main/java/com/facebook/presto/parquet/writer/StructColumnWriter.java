@@ -32,7 +32,7 @@ import static org.apache.parquet.Preconditions.checkArgument;
 public class StructColumnWriter
         implements ColumnWriter
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(StructColumnWriter.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(StructColumnWriter.class).instanceSize();
 
     private final List<ColumnWriter> columnWriters;
     private final int maxDefinitionLevel;

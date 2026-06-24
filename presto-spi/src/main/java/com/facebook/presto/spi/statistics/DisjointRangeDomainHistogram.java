@@ -66,8 +66,8 @@ import static java.util.Objects.requireNonNull;
 public class DisjointRangeDomainHistogram
         implements ConnectorHistogram
 {
-    private static final long INSTANCE_SIZE = ClassLayout.parseClass(DisjointRangeDomainHistogram.class).instanceSize();
-    private static final long RANGE_SIZE = ClassLayout.parseClass(Range.class).instanceSize();
+    private static final long INSTANCE_SIZE = (int) ClassLayout.parseClass(DisjointRangeDomainHistogram.class).instanceSize();
+    private static final long RANGE_SIZE = (int) ClassLayout.parseClass(Range.class).instanceSize();
 
     private final ConnectorHistogram source;
     // use RangeSet as the internal representation of the ranges, but the constructor arguments

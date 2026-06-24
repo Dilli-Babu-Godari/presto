@@ -29,8 +29,8 @@ import java.util.List;
 public class LearnStateFactory
         implements AccumulatorStateFactory<LearnState>
 {
-    private static final long ARRAY_LIST_SIZE = ClassLayout.parseClass(ArrayList.class).instanceSize();
-    private static final long SVM_PARAMETERS_SIZE = ClassLayout.parseClass(svm_parameter.class).instanceSize();
+    private static final long ARRAY_LIST_SIZE = (int) ClassLayout.parseClass(ArrayList.class).instanceSize();
+    private static final long SVM_PARAMETERS_SIZE = (int) ClassLayout.parseClass(svm_parameter.class).instanceSize();
 
     @Override
     public LearnState createSingleState()

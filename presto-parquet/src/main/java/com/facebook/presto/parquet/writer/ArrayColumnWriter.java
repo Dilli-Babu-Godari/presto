@@ -29,7 +29,7 @@ import static java.util.Objects.requireNonNull;
 public class ArrayColumnWriter
         implements ColumnWriter
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(ArrayColumnWriter.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(ArrayColumnWriter.class).instanceSize();
 
     private final ColumnWriter elementWriter;
     private final int maxDefinitionLevel;

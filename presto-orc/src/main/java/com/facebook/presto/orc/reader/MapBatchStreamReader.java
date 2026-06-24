@@ -39,7 +39,7 @@ import static java.util.Objects.requireNonNull;
 public class MapBatchStreamReader
         implements BatchStreamReader
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(MapBatchStreamReader.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(MapBatchStreamReader.class).instanceSize();
 
     private final StreamDescriptor streamDescriptor;
     private final MapDirectBatchStreamReader directReader;

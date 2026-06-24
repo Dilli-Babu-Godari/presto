@@ -61,7 +61,7 @@ import static java.util.Objects.requireNonNull;
 public class InMemoryGroupedTopNBuilder
         implements GroupedTopNBuilder
 {
-    private static final long INSTANCE_SIZE = ClassLayout.parseClass(InMemoryGroupedTopNBuilder.class).instanceSize();
+    private static final long INSTANCE_SIZE = (int) ClassLayout.parseClass(InMemoryGroupedTopNBuilder.class).instanceSize();
     // compact a page when 50% of its positions are unreferenced
     private static final int COMPACT_THRESHOLD = 2;
 
@@ -329,7 +329,7 @@ public class InMemoryGroupedTopNBuilder
 
     private static class PageReference
     {
-        private static final long INSTANCE_SIZE = ClassLayout.parseClass(PageReference.class).instanceSize();
+        private static final long INSTANCE_SIZE = (int) ClassLayout.parseClass(PageReference.class).instanceSize();
 
         private Page page;
         private Row[] reference;
@@ -406,7 +406,7 @@ public class InMemoryGroupedTopNBuilder
     private static class IntFIFOQueue
             extends IntArrayFIFOQueue
     {
-        private static final long INSTANCE_SIZE = ClassLayout.parseClass(IntFIFOQueue.class).instanceSize();
+        private static final long INSTANCE_SIZE = (int) ClassLayout.parseClass(IntFIFOQueue.class).instanceSize();
 
         private long getEstimatedSizeInBytes()
         {
@@ -418,8 +418,8 @@ public class InMemoryGroupedTopNBuilder
     private static class RowHeap
             extends ObjectHeapPriorityQueue<Row>
     {
-        private static final long INSTANCE_SIZE = ClassLayout.parseClass(RowHeap.class).instanceSize();
-        private static final long ROW_ENTRY_SIZE = ClassLayout.parseClass(Row.class).instanceSize();
+        private static final long INSTANCE_SIZE = (int) ClassLayout.parseClass(RowHeap.class).instanceSize();
+        private static final long ROW_ENTRY_SIZE = (int) ClassLayout.parseClass(Row.class).instanceSize();
 
         private RowHeap(Comparator<Row> comparator)
         {

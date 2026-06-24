@@ -32,7 +32,7 @@ import static java.lang.Double.isNaN;
 @ThriftStruct
 public final class Estimate
 {
-    static final long ESTIMATE_SIZE = ClassLayout.parseClass(Estimate.class).instanceSize();
+    static final long ESTIMATE_SIZE = (int) ClassLayout.parseClass(Estimate.class).instanceSize();
 
     // todo eventually add some notion of statistic reliability
     //      Skipping for now as there hard to compute it properly and so far we do not have

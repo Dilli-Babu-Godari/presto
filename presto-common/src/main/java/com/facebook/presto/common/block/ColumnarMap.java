@@ -21,7 +21,7 @@ import static java.util.Objects.requireNonNull;
 
 public class ColumnarMap
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(ColumnarMap.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(ColumnarMap.class).instanceSize();
 
     private final Block nullCheckBlock;
     private final int offsetsOffset;

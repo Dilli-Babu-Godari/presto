@@ -60,7 +60,7 @@ import static org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorFacto
 public class RecordFileWriter
         implements HiveFileWriter
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(RecordFileWriter.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(RecordFileWriter.class).instanceSize();
 
     private final Path path;
     private final JobConf conf;

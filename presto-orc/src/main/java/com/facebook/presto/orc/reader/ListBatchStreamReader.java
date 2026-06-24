@@ -50,7 +50,7 @@ import static java.util.Objects.requireNonNull;
 public class ListBatchStreamReader
         implements BatchStreamReader
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(ListBatchStreamReader.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(ListBatchStreamReader.class).instanceSize();
 
     private final Type elementType;
     private final StreamDescriptor streamDescriptor;

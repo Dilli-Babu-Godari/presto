@@ -32,7 +32,7 @@ import static java.util.Objects.requireNonNull;
  */
 class DecodedBlockNode
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(DecodedBlockNode.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(DecodedBlockNode.class).instanceSize();
 
     // The decodedBlock could be primitive block, Dictionary/RLE block, or ColumnarArray/Map/Row object
     private final Object decodedBlock;

@@ -42,7 +42,7 @@ import static java.util.Objects.requireNonNull;
 public class ParquetFileWriter
         implements HiveFileWriter
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(ParquetFileWriter.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(ParquetFileWriter.class).instanceSize();
 
     private final ParquetWriter parquetWriter;
     private final Callable<Void> rollbackAction;

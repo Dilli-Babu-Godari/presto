@@ -23,7 +23,7 @@ import static java.util.Objects.requireNonNull;
 public class DictionaryPage
         extends Page
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(DictionaryPage.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(DictionaryPage.class).instanceSize();
 
     private final Slice slice;
     private final int dictionarySize;

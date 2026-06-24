@@ -32,7 +32,7 @@ import static java.util.Objects.requireNonNull;
  */
 public class HiveSplitPartitionInfo
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(HiveSplitPartitionInfo.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(HiveSplitPartitionInfo.class).instanceSize();
 
     private final Storage storage;
     private final String path;

@@ -43,7 +43,7 @@ import static java.util.Objects.requireNonNull;
 public class FixedDoubleBreakdownHistogram
         implements Iterable<FixedDoubleBreakdownHistogram.Bucket>
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(FixedDoubleBreakdownHistogram.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(FixedDoubleBreakdownHistogram.class).instanceSize();
 
     private final int bucketCount;
     private final double min;

@@ -109,7 +109,7 @@ public class TestSfmSketch
         SfmSketch sketch = SfmSketch.create(4096, 24);
         sketch.enablePrivacy(4);
         assertEquals(sketch.getRetainedSizeInBytes(),
-                ClassLayout.parseClass(SfmSketch.class).instanceSize() +
+                (int) ClassLayout.parseClass(SfmSketch.class).instanceSize() +
                         sketch.getBitmap().getRetainedSizeInBytes());
     }
 

@@ -25,8 +25,8 @@ import static org.testng.Assert.assertEquals;
 @Test(singleThreaded = true)
 public class TestSliceBigArray
 {
-    private static final long BIG_ARRAY_INSTANCE_SIZE = ClassLayout.parseClass(SliceBigArray.class).instanceSize() + new ReferenceCountMap().sizeOf() + new ObjectBigArray<Slice>().sizeOf();
-    private static final long SLICE_INSTANCE_SIZE = ClassLayout.parseClass(Slice.class).instanceSize();
+    private static final long BIG_ARRAY_INSTANCE_SIZE = (int) ClassLayout.parseClass(SliceBigArray.class).instanceSize() + new ReferenceCountMap().sizeOf() + new ObjectBigArray<Slice>().sizeOf();
+    private static final long SLICE_INSTANCE_SIZE = (int) ClassLayout.parseClass(Slice.class).instanceSize();
     private static final int CAPACITY = 32;
     private final byte[] firstBytes = new byte[1234];
     private final byte[] secondBytes = new byte[4567];

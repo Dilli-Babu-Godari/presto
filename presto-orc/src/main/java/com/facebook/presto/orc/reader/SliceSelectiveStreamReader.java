@@ -39,7 +39,7 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 public class SliceSelectiveStreamReader
         implements SelectiveStreamReader
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(SliceSelectiveStreamReader.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(SliceSelectiveStreamReader.class).instanceSize();
 
     private final SelectiveReaderContext context;
 

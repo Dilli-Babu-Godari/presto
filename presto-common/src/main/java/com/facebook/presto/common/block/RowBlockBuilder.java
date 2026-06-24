@@ -34,7 +34,7 @@ public class RowBlockBuilder
         extends AbstractRowBlock
         implements BlockBuilder
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(RowBlockBuilder.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(RowBlockBuilder.class).instanceSize();
 
     @Nullable
     private final BlockBuilderStatus blockBuilderStatus;

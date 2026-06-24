@@ -47,7 +47,7 @@ import static java.util.Objects.requireNonNull;
 public class SpillableGroupedTopNBuilder
         implements GroupedTopNBuilder
 {
-    private static final long INSTANCE_SIZE = ClassLayout.parseClass(SpillableGroupedTopNBuilder.class).instanceSize();
+    private static final long INSTANCE_SIZE = (int) ClassLayout.parseClass(SpillableGroupedTopNBuilder.class).instanceSize();
 
     private final Supplier<InMemoryGroupedTopNBuilder> inputInMemoryGroupedTopNBuilderSupplier;
     private final Supplier<InMemoryGroupedTopNBuilder> outputInMemoryGroupedTopNBuilderSupplier;

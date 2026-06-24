@@ -35,7 +35,7 @@ import static java.util.Objects.hash;
 public class UniformDistributionHistogram
         implements ConnectorHistogram
 {
-    private static final long INSTANCE_SIZE = ClassLayout.parseClass(UniformDistributionHistogram.class).instanceSize();
+    private static final long INSTANCE_SIZE = (int) ClassLayout.parseClass(UniformDistributionHistogram.class).instanceSize();
     private final double lowValue;
     private final double highValue;
 

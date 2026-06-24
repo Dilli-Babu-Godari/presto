@@ -632,7 +632,7 @@ public final class FunctionAssertions
             }
         }
 
-        long retainedSize = ClassLayout.parseClass(type).instanceSize();
+        long retainedSize = (int) ClassLayout.parseClass(type).instanceSize();
         Field[] fields = type.getDeclaredFields();
         for (Field field : fields) {
             try {

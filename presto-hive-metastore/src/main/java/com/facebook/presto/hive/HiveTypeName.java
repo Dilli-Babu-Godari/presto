@@ -21,7 +21,7 @@ import static java.util.Objects.requireNonNull;
 
 public final class HiveTypeName
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(String.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(String.class).instanceSize();
 
     private final String value;
 

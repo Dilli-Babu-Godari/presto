@@ -28,7 +28,7 @@ import static java.util.Objects.requireNonNull;
 public class FixedLenByteArrayUuidDeltaValuesDecoder
         implements UuidValuesDecoder
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(FixedLenByteArrayUuidDeltaValuesDecoder.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(FixedLenByteArrayUuidDeltaValuesDecoder.class).instanceSize();
 
     private final ValuesReader delegate;
 

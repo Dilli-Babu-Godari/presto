@@ -49,10 +49,10 @@ import static org.testng.Assert.assertTrue;
 
 public class TestInMemoryGroupedTopNBuilder
 {
-    private static final long INSTANCE_SIZE = ClassLayout.parseClass(InMemoryGroupedTopNBuilder.class).instanceSize();
-    private static final long INT_FIFO_QUEUE_SIZE = ClassLayout.parseClass(IntArrayFIFOQueue.class).instanceSize();
-    private static final long OBJECT_OVERHEAD = ClassLayout.parseClass(Object.class).instanceSize();
-    private static final long PAGE_REFERENCE_INSTANCE_SIZE = ClassLayout.parseClass(TestPageReference.class).instanceSize();
+    private static final long INSTANCE_SIZE = (int) ClassLayout.parseClass(InMemoryGroupedTopNBuilder.class).instanceSize();
+    private static final long INT_FIFO_QUEUE_SIZE = (int) ClassLayout.parseClass(IntArrayFIFOQueue.class).instanceSize();
+    private static final long OBJECT_OVERHEAD = (int) ClassLayout.parseClass(Object.class).instanceSize();
+    private static final long PAGE_REFERENCE_INSTANCE_SIZE = (int) ClassLayout.parseClass(TestPageReference.class).instanceSize();
 
     @DataProvider
     public static Object[][] produceRowNumbers()
@@ -503,7 +503,7 @@ public class TestInMemoryGroupedTopNBuilder
     private static class TestRowHeap
             extends ObjectHeapPriorityQueue<Object>
     {
-        private static final long INSTANCE_SIZE = ClassLayout.parseClass(TestRowHeap.class).instanceSize();
+        private static final long INSTANCE_SIZE = (int) ClassLayout.parseClass(TestRowHeap.class).instanceSize();
         // each Row is with two integers
         private static final long ROW_ENTRY_SIZE = 2 * Integer.BYTES + OBJECT_OVERHEAD;
 

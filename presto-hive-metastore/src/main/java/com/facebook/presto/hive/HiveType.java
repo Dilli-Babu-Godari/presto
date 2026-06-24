@@ -77,7 +77,7 @@ import static org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils.getTypeInfosF
 
 public final class HiveType
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(HiveType.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(HiveType.class).instanceSize();
 
     public static final HiveType HIVE_BOOLEAN = new HiveType(booleanTypeInfo);
     public static final HiveType HIVE_BYTE = new HiveType(byteTypeInfo);

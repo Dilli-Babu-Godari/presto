@@ -76,7 +76,7 @@ abstract class AbstractOrcRecordReader<T extends StreamReader>
 {
     protected final OrcAggregatedMemoryContext systemMemoryUsage;
 
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(AbstractOrcRecordReader.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(AbstractOrcRecordReader.class).instanceSize();
 
     private final OrcDataSource orcDataSource;
 

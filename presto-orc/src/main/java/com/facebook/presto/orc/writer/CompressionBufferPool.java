@@ -31,7 +31,7 @@ public interface CompressionBufferPool
     class LastUsedCompressionBufferPool
             implements CompressionBufferPool
     {
-        private static final int INSTANCE_SIZE = ClassLayout.parseClass(LastUsedCompressionBufferPool.class).instanceSize();
+        private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(LastUsedCompressionBufferPool.class).instanceSize();
         private byte[] lastUsed;
 
         @Override

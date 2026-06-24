@@ -42,7 +42,7 @@ import static com.google.common.base.Preconditions.checkState;
 public class LongDictionaryColumnWriter
         extends DictionaryColumnWriter
 {
-    private static final long INSTANCE_SIZE = ClassLayout.parseClass(LongDictionaryColumnWriter.class).instanceSize();
+    private static final long INSTANCE_SIZE = (int) ClassLayout.parseClass(LongDictionaryColumnWriter.class).instanceSize();
     private static final int EXPECTED_ENTRIES = 10_000;
 
     private final FixedWidthType type;

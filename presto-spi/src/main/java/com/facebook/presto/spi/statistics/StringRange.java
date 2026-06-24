@@ -23,7 +23,7 @@ import static java.util.Objects.requireNonNull;
 
 public class StringRange
 {
-    static final long STRING_RANGE_SIZE = ClassLayout.parseClass(StringRange.class).instanceSize();
+    static final long STRING_RANGE_SIZE = (int) ClassLayout.parseClass(StringRange.class).instanceSize();
 
     private final String min;
     private final String max;

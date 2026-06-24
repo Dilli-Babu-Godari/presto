@@ -30,7 +30,7 @@ import static java.util.Objects.requireNonNull;
 @ThriftStruct
 public class BlockLocation
 {
-    private static final long INSTANCE_SIZE = ClassLayout.parseClass(BlockLocation.class).instanceSize();
+    private static final long INSTANCE_SIZE = (int) ClassLayout.parseClass(BlockLocation.class).instanceSize();
 
     private final List<String> hosts;
     private final long offset;

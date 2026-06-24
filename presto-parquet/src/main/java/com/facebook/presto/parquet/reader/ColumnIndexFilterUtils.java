@@ -88,7 +88,7 @@ public class ColumnIndexFilterUtils
     private static class FilteredOffsetIndex
             implements OffsetIndex
     {
-        private static final int INSTANCE_SIZE = ClassLayout.parseClass(FilteredOffsetIndex.class).instanceSize();
+        private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(FilteredOffsetIndex.class).instanceSize();
 
         private final OffsetIndex offsetIndex;
         private final int[] indices;

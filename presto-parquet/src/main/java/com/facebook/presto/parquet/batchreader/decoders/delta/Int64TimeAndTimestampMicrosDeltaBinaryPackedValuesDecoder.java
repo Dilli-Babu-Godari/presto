@@ -32,7 +32,7 @@ import static java.util.concurrent.TimeUnit.MICROSECONDS;
 public class Int64TimeAndTimestampMicrosDeltaBinaryPackedValuesDecoder
         implements Int64TimeAndTimestampMicrosValuesDecoder
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(Int64TimeAndTimestampMicrosDeltaBinaryPackedValuesDecoder.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(Int64TimeAndTimestampMicrosDeltaBinaryPackedValuesDecoder.class).instanceSize();
 
     private final DeltaBinaryPackingValuesReader innerReader;
 

@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+    "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+    "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+
+<suppressions>
+    <!-- Allow jdk.internal.misc.Unsafe import for Java 25 compatibility -->
+    <suppress checks="IllegalImport" files="ByteArrayUtils\.java" />
+    <suppress checks="IllegalImport" files="UnscaledDecimal128Arithmetic\.java" />
+    
+    <!-- Suppress annotation style warnings in test files -->
+    <suppress checks="AnnotationUseStyle" files="TestRuntimeStats\.java" />
+    <suppress checks="AnnotationUseStyle" files="TestRuntimeMetric\.java" />
+</suppressions>

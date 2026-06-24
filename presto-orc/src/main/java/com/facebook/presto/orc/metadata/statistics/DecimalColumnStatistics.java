@@ -23,7 +23,7 @@ import static java.util.Objects.requireNonNull;
 public class DecimalColumnStatistics
         extends ColumnStatistics
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(DecimalColumnStatistics.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(DecimalColumnStatistics.class).instanceSize();
 
     private final DecimalStatistics decimalStatistics;
 

@@ -25,7 +25,7 @@ import static java.util.Objects.requireNonNull;
 public class MapStatistics
         implements Hashable
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(MapStatistics.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(MapStatistics.class).instanceSize();
     private final List<MapStatisticsEntry> entries;
 
     public MapStatistics(List<MapStatisticsEntry> entries)

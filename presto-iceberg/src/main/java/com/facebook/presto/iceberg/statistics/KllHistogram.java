@@ -56,7 +56,7 @@ import static org.apache.datasketches.quantilescommon.QuantileSearchCriteria.INC
 public class KllHistogram
         implements ConnectorHistogram
 {
-    private static final long INSTANCE_SIZE = ClassLayout.parseClass(KllHistogram.class).instanceSize();
+    private static final long INSTANCE_SIZE = (int) ClassLayout.parseClass(KllHistogram.class).instanceSize();
     // since the actual type parameter is only known at runtime, we can't concretely specify it
     private final KllItemsSketch<Object> sketch;
     private final Type type;

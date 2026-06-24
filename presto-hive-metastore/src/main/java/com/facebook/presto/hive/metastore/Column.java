@@ -28,7 +28,7 @@ import static java.util.Objects.requireNonNull;
 @Immutable
 public class Column
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(Column.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(Column.class).instanceSize();
 
     private final String name;
     private final HiveType type;

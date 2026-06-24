@@ -26,7 +26,7 @@ import static java.lang.String.format;
 public class SingleRowBlock
         extends AbstractSingleRowBlock
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(SingleRowBlock.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(SingleRowBlock.class).instanceSize();
 
     private final Block[] fieldBlocks;
 

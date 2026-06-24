@@ -26,7 +26,7 @@ public class SingleRowBlockWriter
         extends AbstractSingleRowBlock
         implements BlockBuilder
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(SingleRowBlockWriter.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(SingleRowBlockWriter.class).instanceSize();
 
     private final BlockBuilder[] fieldBlockBuilders;
 

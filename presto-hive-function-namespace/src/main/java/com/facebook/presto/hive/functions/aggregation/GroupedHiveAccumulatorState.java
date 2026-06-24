@@ -25,7 +25,7 @@ import java.util.function.Supplier;
 public final class GroupedHiveAccumulatorState
         implements GroupedAccumulatorState, HiveAccumulatorState
 {
-    private static final long INSTANCE_SIZE = ClassLayout.parseClass(GroupedHiveAccumulatorState.class).instanceSize();
+    private static final long INSTANCE_SIZE = (int) ClassLayout.parseClass(GroupedHiveAccumulatorState.class).instanceSize();
 
     private final Supplier<AggregationBuffer> bufferSupplier;
     private ObjectBigArray<AggregationBuffer> buffers = new ObjectBigArray<>();

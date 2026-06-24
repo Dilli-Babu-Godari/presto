@@ -28,13 +28,13 @@ import static java.util.Objects.requireNonNull;
 
 public final class ColumnStatistics
 {
-    private static final long COLUMN_STATISTICS_SIZE = ClassLayout.parseClass(ColumnStatistics.class).instanceSize();
-    private static final long OPTION_SIZE = ClassLayout.parseClass(Optional.class).instanceSize();
+    private static final long COLUMN_STATISTICS_SIZE = (int) ClassLayout.parseClass(ColumnStatistics.class).instanceSize();
+    private static final long OPTION_SIZE = (int) ClassLayout.parseClass(Optional.class).instanceSize();
 
     public static final double INFINITE_TO_FINITE_RANGE_INTERSECT_OVERLAP_HEURISTIC_FACTOR = 0.25;
     public static final double INFINITE_TO_INFINITE_RANGE_INTERSECT_OVERLAP_HEURISTIC_FACTOR = 0.5;
     private static final ColumnStatistics EMPTY = new ColumnStatistics(Estimate.unknown(), Estimate.unknown(), Estimate.unknown(), Optional.empty(), Optional.empty(), Optional.empty());
-    private static final long STRING_CLASS_SIZE = ClassLayout.parseClass(String.class).instanceSize();
+    private static final long STRING_CLASS_SIZE = (int) ClassLayout.parseClass(String.class).instanceSize();
 
     private final Estimate nullsFraction;
     private final Estimate distinctValuesCount;

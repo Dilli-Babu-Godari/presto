@@ -37,7 +37,7 @@ import static java.util.Objects.requireNonNull;
 public class ListFilter
         implements HierarchicalFilter
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(ListFilter.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(ListFilter.class).instanceSize();
 
     @Nullable
     private final HierarchicalFilter parent;

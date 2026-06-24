@@ -25,8 +25,8 @@ import static java.util.Objects.requireNonNull;
 public class MapStatisticsEntry
         implements Hashable
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(MapStatisticsEntry.class).instanceSize();
-    private static final int KEY_INSTANCE_SIZE = ClassLayout.parseClass(DwrfProto.KeyInfo.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(MapStatisticsEntry.class).instanceSize();
+    private static final int KEY_INSTANCE_SIZE = (int) ClassLayout.parseClass(DwrfProto.KeyInfo.class).instanceSize();
     private final DwrfProto.KeyInfo key;
     private final ColumnStatistics columnStatistics;
 

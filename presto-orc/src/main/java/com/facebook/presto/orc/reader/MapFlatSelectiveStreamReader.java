@@ -79,7 +79,7 @@ import static java.util.Objects.requireNonNull;
 public class MapFlatSelectiveStreamReader
         implements SelectiveStreamReader
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(MapFlatSelectiveStreamReader.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(MapFlatSelectiveStreamReader.class).instanceSize();
 
     private final StreamDescriptor streamDescriptor;
 

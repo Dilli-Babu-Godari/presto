@@ -59,7 +59,7 @@ public class TestArrayBlockBuilder
             BIGINT.writeLong(arrayElementBuilder, i);
             arrayBlockBuilder.closeEntry();
         }
-        assertTrue(arrayBlockBuilder.getRetainedSizeInBytes() >= (expectedEntries * Long.BYTES + ClassLayout.parseClass(LongArrayBlockBuilder.class).instanceSize() + initialRetainedSize));
+        assertTrue(arrayBlockBuilder.getRetainedSizeInBytes() >= (expectedEntries * Long.BYTES + (int) ClassLayout.parseClass(LongArrayBlockBuilder.class).instanceSize() + initialRetainedSize));
     }
 
     @Test(expectedExceptions = IllegalStateException.class, expectedExceptionsMessageRegExp = "Expected current entry to be closed but was opened")

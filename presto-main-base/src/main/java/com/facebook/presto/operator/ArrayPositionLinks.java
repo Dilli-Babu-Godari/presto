@@ -27,7 +27,7 @@ import static java.util.Objects.requireNonNull;
 public final class ArrayPositionLinks
         implements PositionLinks
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(ArrayPositionLinks.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(ArrayPositionLinks.class).instanceSize();
 
     public static class FactoryBuilder
             implements PositionLinks.FactoryBuilder

@@ -36,7 +36,7 @@ public class ThetaSketchStateFactory
      * to calculate the additional memory used by the class layout. Using this increases the
      * estimate by a few bytes to account for at least <em>some</em> of that deficit.
      */
-    private static final long SKETCH_INSTANCE_SIZE = ClassLayout.parseClass(Union.class).instanceSize();
+    private static final long SKETCH_INSTANCE_SIZE = (int) ClassLayout.parseClass(Union.class).instanceSize();
 
     @Override
     public SingleThetaSketchState createSingleState()
@@ -65,7 +65,7 @@ public class ThetaSketchStateFactory
     public static final class SingleThetaSketchState
             implements ThetaSketchAggregationState
     {
-        private static final long INSTANCE_SIZE = ClassLayout.parseClass(SingleThetaSketchState.class).instanceSize();
+        private static final long INSTANCE_SIZE = (int) ClassLayout.parseClass(SingleThetaSketchState.class).instanceSize();
 
         private Union sketch = Union.builder().buildUnion();
 
@@ -98,7 +98,7 @@ public class ThetaSketchStateFactory
             extends AbstractGroupedAccumulatorState
             implements ThetaSketchAggregationState
     {
-        private static final int INSTANCE_SIZE = ClassLayout.parseClass(GroupedThetaSketchState.class).instanceSize();
+        private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(GroupedThetaSketchState.class).instanceSize();
         private final ObjectBigArray<Union> sketches = new ObjectBigArray<>();
         private long sizeBytes;
 

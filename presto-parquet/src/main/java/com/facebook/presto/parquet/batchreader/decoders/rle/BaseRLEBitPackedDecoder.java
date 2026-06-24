@@ -32,7 +32,7 @@ import static org.apache.parquet.bytes.BytesUtils.readUnsignedVarInt;
 
 public abstract class BaseRLEBitPackedDecoder
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(BaseRLEBitPackedDecoder.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(BaseRLEBitPackedDecoder.class).instanceSize();
 
     private final boolean rleOnlyMode;
     private final int bitWidth;

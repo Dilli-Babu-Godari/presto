@@ -49,7 +49,7 @@ import static java.lang.Math.toIntExact;
 public class SliceDictionaryColumnWriter
         extends DictionaryColumnWriter
 {
-    private static final long INSTANCE_SIZE = ClassLayout.parseClass(SliceDictionaryColumnWriter.class).instanceSize();
+    private static final long INSTANCE_SIZE = (int) ClassLayout.parseClass(SliceDictionaryColumnWriter.class).instanceSize();
     private static final int DIRECT_CONVERSION_CHUNK_MAX_LOGICAL_BYTES = toIntExact(new DataSize(32, MEGABYTE).toBytes());
     private static final int EXPECTED_ENTRIES = 1_024;
 

@@ -32,7 +32,7 @@ import static java.lang.Math.toIntExact;
 public class FloatOutputStream
         implements ValueOutputStream<FloatStreamCheckpoint>
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(FloatOutputStream.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(FloatOutputStream.class).instanceSize();
     private final OrcOutputBuffer buffer;
     private final List<FloatStreamCheckpoint> checkpoints = new ArrayList<>();
 

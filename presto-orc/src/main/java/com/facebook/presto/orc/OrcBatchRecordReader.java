@@ -40,7 +40,7 @@ import static com.facebook.presto.orc.StreamDescriptorFactory.createStreamDescri
 public class OrcBatchRecordReader
         extends AbstractOrcRecordReader<BatchStreamReader>
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(OrcBatchRecordReader.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(OrcBatchRecordReader.class).instanceSize();
 
     public OrcBatchRecordReader(
             Map<Integer, Type> includedColumns,

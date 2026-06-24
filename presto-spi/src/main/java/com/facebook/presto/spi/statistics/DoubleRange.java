@@ -26,7 +26,7 @@ import static java.util.Objects.requireNonNull;
 
 public class DoubleRange
 {
-    static final long RANGE_SIZE = ClassLayout.parseClass(DoubleRange.class).instanceSize();
+    static final long RANGE_SIZE = (int) ClassLayout.parseClass(DoubleRange.class).instanceSize();
 
     private final double min;
     private final double max;

@@ -28,7 +28,7 @@ import static java.util.Objects.requireNonNull;
 public class GroupByIdBlock
         implements Block
 {
-    private static final int INSTANCE_SIZE = ClassLayout.parseClass(GroupByIdBlock.class).instanceSize();
+    private static final int INSTANCE_SIZE = (int) ClassLayout.parseClass(GroupByIdBlock.class).instanceSize();
 
     private final long groupCount;
     private final Block block;
