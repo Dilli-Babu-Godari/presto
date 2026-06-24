@@ -11,6 +11,7 @@
     <name>presto-spark-launcher</name>
 
     <properties>
+        <project.build.targetJdk>17</project.build.targetJdk>
         <air.main.basedir>${project.parent.basedir}</air.main.basedir>
         <shadeBase>com.facebook.presto.spark.launcher.internal</shadeBase>
         <main-class>com.facebook.presto.spark.launcher.PrestoSparkLauncher</main-class>

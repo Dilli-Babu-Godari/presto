@@ -15,7 +15,6 @@
         <air.main.basedir>${project.parent.basedir}</air.main.basedir>
         <main-class>com.facebook.presto.verifier.PrestoVerifier</main-class>
         <process-name>${project.artifactId}</process-name>
-        <project.build.targetJdk>17</project.build.targetJdk>
         <air.check.skip-modernizer>true</air.check.skip-modernizer>
     </properties>
 

@@ -11,7 +11,6 @@
     <properties>
         <air.main.basedir>${project.parent.basedir}</air.main.basedir>
         <lettuce.version>6.5.1.RELEASE</lettuce.version>
-        <project.build.targetJdk>17</project.build.targetJdk>
         <air.check.skip-modernizer>true</air.check.skip-modernizer>
     </properties>
 

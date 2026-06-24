@@ -12,6 +12,7 @@
     <name>presto-spark-package</name>
 
     <properties>
+        <project.build.targetJdk>17</project.build.targetJdk>
         <air.main.basedir>${project.parent.basedir}</air.main.basedir>
 
         <air.check.skip-enforcer>true</air.check.skip-enforcer>

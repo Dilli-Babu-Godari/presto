@@ -40,7 +40,7 @@
         <air.check.skip-pmd>true</air.check.skip-pmd>
         <air.checkstyle.config-file>src/checkstyle/presto-checks.xml</air.checkstyle.config-file>
 
-        <air.java.version>17</air.java.version>
+        <air.java.version>25</air.java.version>
         <air.maven.version>3.3.9</air.maven.version>
 
         <dep.antlr.version>4.13.2</dep.antlr.version>

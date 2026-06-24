@@ -13,7 +13,6 @@
     <packaging>jar</packaging>
 
     <properties>
-        <project.build.targetJdk>17</project.build.targetJdk>
         <air.check.skip-modernizer>true</air.check.skip-modernizer>
     </properties>
 

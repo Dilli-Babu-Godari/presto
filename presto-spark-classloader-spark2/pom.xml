@@ -11,6 +11,7 @@
   <name>presto-spark-classloader-spark2</name>
 
   <properties>
+        <project.build.targetJdk>17</project.build.targetJdk>
     <air.main.basedir>${project.parent.basedir}</air.main.basedir>
   </properties>
 

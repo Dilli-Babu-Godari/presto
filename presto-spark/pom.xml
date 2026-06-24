@@ -11,6 +11,7 @@
     <name>presto-spark</name>
 
     <properties>
+        <project.build.targetJdk>17</project.build.targetJdk>
         <air.main.basedir>${project.parent.basedir}</air.main.basedir>
         <air.check.skip-modernizer>true</air.check.skip-modernizer>
         <dep.jetty.version>9.4.55.v20240627</dep.jetty.version>
