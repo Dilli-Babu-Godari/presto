@@ -15,8 +15,10 @@ package com.facebook.presto.iceberg.rest;
 
 import com.facebook.airlift.configuration.Config;
 import com.facebook.airlift.configuration.ConfigDescription;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
+import java.time.Duration;
 import java.util.Optional;
 
 public class IcebergRestConfig
@@ -29,6 +31,9 @@ public class IcebergRestConfig
     private String token;
     private String scope;
     private boolean nestedNamespaceEnabled = true;
+    private boolean credentialCachingEnabled = true;
+    private int credentialCacheSize = 10;
+    private Duration credentialRefreshBuffer = Duration.ofMinutes(5);
 
     @NotNull
     public Optional<String> getServerUri()
@@ -138,5 +143,45 @@ public class IcebergRestConfig
     public boolean credentialOrTokenExists()
     {
         return credential != null || token != null;
+    }
+
+    public boolean isCredentialCachingEnabled()
+    {
+        return credentialCachingEnabled;
+    }
+
+    @Config("iceberg.rest.credential.caching-enabled")
+    @ConfigDescription("Enable caching of temporary credentials from REST Catalog")
+    public IcebergRestConfig setCredentialCachingEnabled(boolean credentialCachingEnabled)
+    {
+        this.credentialCachingEnabled = credentialCachingEnabled;
+        return this;
+    }
+
+    @Min(1)
+    public int getCredentialCacheSize()
+    {
+        return credentialCacheSize;
+    }
+
+    @Config("iceberg.rest.credential.cache-size")
+    @ConfigDescription("Maximum number of credential entries to cache")
+    public IcebergRestConfig setCredentialCacheSize(int credentialCacheSize)
+    {
+        this.credentialCacheSize = credentialCacheSize;
+        return this;
+    }
+
+    public Duration getCredentialRefreshBuffer()
+    {
+        return credentialRefreshBuffer;
+    }
+
+    @Config("iceberg.rest.credential.refresh-buffer")
+    @ConfigDescription("Time before expiration to trigger proactive credential refresh")
+    public IcebergRestConfig setCredentialRefreshBuffer(Duration credentialRefreshBuffer)
+    {
+        this.credentialRefreshBuffer = credentialRefreshBuffer;
+        return this;
     }
 }
